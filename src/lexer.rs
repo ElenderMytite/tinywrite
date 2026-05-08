@@ -48,11 +48,45 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 buffer.push(c);
                 mode = WritingMode::Int;
             }
-            '+' | '-' | '*' | '/' | '|' | '(' | ')' | '[' | ']' | '{' | '}' | '=' | '<' | '>' => {
+            _ if c.is_ascii_punctuation() => {
                 tokens.push(format!("{}", c));
             }
             _ => ()
         }
     }
-    tokens
+    combine_tokens(tokens)
+}
+use std::collections::HashSet;
+
+fn combine_tokens(tokens: Vec<String>) -> Vec<String> {
+    let two_char_pairs: HashSet<&'static str> = [
+        "==", "!=", "=!", "=<", "=>", "<=", "<!", ">=", ">!", "!<", "!>", "!&", "!|", "!^",
+    ]
+    .iter()
+    .copied()
+    .collect();
+
+    let mut out = Vec::with_capacity(tokens.len());
+    let mut i = 0;
+    while i < tokens.len() {
+        if tokens[i] == "-" && i + 1 < tokens.len() && tokens[i + 1].chars().all(|c| c.is_ascii_digit()) {
+            out.push(format!("-{}", tokens[i + 1]));
+            i += 2;
+            continue;
+        }
+
+        if i + 1 < tokens.len() {
+            let pair = format!("{}{}", tokens[i], tokens[i + 1]);
+            if two_char_pairs.contains(pair.as_str()) {
+                out.push(pair);
+                i += 2;
+                continue;
+            }
+        }
+
+        out.push(tokens[i].clone());
+        i += 1;
+    }
+
+    out
 }

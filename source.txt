@@ -1,4 +1,1 @@
-I do * - / + =  (know how this works)
-vec1 char _int (str) read write init  
-123 023 342_4 1_000_000_000
-puk
+(%((puk 1024 +) * 2) 3)
