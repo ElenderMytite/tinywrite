@@ -87,10 +87,24 @@ pub fn astify(
             ")" => {
                 if block_type == ParsingMode::Expression {
                     let node = parse_expression(&buffer);
+                    buffer.clear();
                     // println!("parsed expression: {:?}", node);
                     return Ok(AstNode::Expression(node));
                 }
             }
+            "," => match block_type {
+                ParsingMode::Expression => {
+                    buffer.push(Part::Node(AstNode::Expression(parse_expression(&buffer))));
+                }
+                ParsingMode::BlockCode | ParsingMode::BlockVec => {
+                    if !buffer.is_empty() {
+                        let node = parse_expression(&buffer);
+                        buffer.clear();
+                        // println!("parsed expression: {:?}", node);
+                        nodes.push(AstNode::Expression(node));
+                    }
+                }
+            },
             "}" => {
                 if block_type == ParsingMode::BlockCode {
                     return Ok(AstNode::BlockCode(nodes));

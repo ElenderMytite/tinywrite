@@ -16,7 +16,7 @@ pub enum Command {
     Mod,
     // stack operations
     Put(StackValue),
-    Pop,
+    Cls,
     // comparision
     Gt,
     Geq,
@@ -45,6 +45,7 @@ pub fn ir(root: AstNode, variables: &mut HashMap<String, usize>) -> Vec<Command>
         AstNode::BlockCode(nodes) => {
             for node in nodes {
                 commands.append(&mut ir(node, variables));
+                commands.push(Command::Cls);
             }
         }
     }

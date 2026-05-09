@@ -1,6 +1,12 @@
-text: (%((puk 1024 + somein 45 37 2) * 2) 3) # test comment
+text: %((puk 1024 + somein 45 37 2) * 2) 3, # test comment
+5 >= 4,
+6 !> 6,
+7 !< 2,
+8 7 6 - 4 3 2,
+-32,
+1 2 3 4 / 5 6 7 8,
 
-tokens: ["(", "%", "(", "(", "puk", "1024", "+", "somein", "45", "37", "2", ")", "*", "2", ")", "3", ")"]
+tokens: ["%", "(", "(", "puk", "1024", "+", "somein", "45", "37", "2", ")", "*", "2", ")", "3", ",", "5", ">=", "4", ",", "6", "!>", "6", ",", "7", "!<", "2", ",", "8", "7", "6", "-4", "3", "2", ",", "-32", ",", "1", "2", "3", "4", "/", "5", "6", "7", "8", ","]
 ast: BlockCode(
     [
         Expression(
@@ -65,9 +71,144 @@ ast: BlockCode(
                 ],
             },
         ),
+        Expression(
+            Expression {
+                operation: Some(
+                    Comparison(
+                        GreaterOrEqual,
+                    ),
+                ),
+                left: [
+                    Number(
+                        5,
+                    ),
+                ],
+                right: [
+                    Number(
+                        4,
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: Some(
+                    Comparison(
+                        LessOrEqual,
+                    ),
+                ),
+                left: [
+                    Number(
+                        6,
+                    ),
+                ],
+                right: [
+                    Number(
+                        6,
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: Some(
+                    Comparison(
+                        GreaterOrEqual,
+                    ),
+                ),
+                left: [
+                    Number(
+                        7,
+                    ),
+                ],
+                right: [
+                    Number(
+                        2,
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
+                    Number(
+                        8,
+                    ),
+                    Number(
+                        7,
+                    ),
+                    Number(
+                        6,
+                    ),
+                    Number(
+                        -4,
+                    ),
+                    Number(
+                        3,
+                    ),
+                    Number(
+                        2,
+                    ),
+                ],
+                right: [],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
+                    Number(
+                        -32,
+                    ),
+                ],
+                right: [],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: Some(
+                    Computation(
+                        Div,
+                    ),
+                ),
+                left: [
+                    Number(
+                        1,
+                    ),
+                    Number(
+                        2,
+                    ),
+                    Number(
+                        3,
+                    ),
+                    Number(
+                        4,
+                    ),
+                ],
+                right: [
+                    Number(
+                        5,
+                    ),
+                    Number(
+                        6,
+                    ),
+                    Number(
+                        7,
+                    ),
+                    Number(
+                        8,
+                    ),
+                ],
+            },
+        ),
     ],
 )
 right len: 0; left len: 2; command: Mod
 right len: 1; left len: 1; command: Mul
 right len: 2; left len: 4; command: Add
-ir: [Load(0), Put(Int(1024)), Add, Load(1), Add, Put(Int(45)), Add, Put(Int(37)), Add, Put(Int(2)), Add, Put(Int(2)), Mul, Put(Int(3)), Mod]
+right len: 1; left len: 1; command: Geq
+right len: 1; left len: 1; command: Leq
+right len: 1; left len: 1; command: Geq
+right len: 4; left len: 4; command: Div
+ir: [Load(0), Put(Int(1024)), Add, Load(1), Add, Put(Int(45)), Add, Put(Int(37)), Add, Put(Int(2)), Add, Put(Int(2)), Mul, Put(Int(3)), Mod, Cls, Put(Int(5)), Put(Int(4)), Geq, Cls, Put(Int(6)), Put(Int(6)), Leq, Cls, Put(Int(7)), Put(Int(2)), Geq, Cls, Cls, Put(Int(-32)), Cls, Put(Int(1)), Put(Int(2)), Mul, Put(Int(3)), Mul, Put(Int(4)), Mul, Put(Int(5)), Put(Int(6)), Mul, Put(Int(7)), Mul, Put(Int(8)), Mul, Div, Cls]
