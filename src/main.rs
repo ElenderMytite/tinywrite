@@ -9,6 +9,6 @@ fn main() {
     println!("tokens: {:?}", tokens);
     let ast = parser::astify(&tokens, parser::ParsingMode::BlockCode, &mut 0).unwrap();
     println!("ast: {:#?}", ast);
-    let ir = vm::ir(ast, &mut HashMap::new());
+    let ir = ir::ir(ast, &mut HashMap::new());
     println!("ir: {:?}", ir);
 }
