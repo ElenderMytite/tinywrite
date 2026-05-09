@@ -1,11 +1,7 @@
 use std::collections::HashMap;
 
 use crate::parser::{AstNode, Comparison, Computation, Expression, Logic, Operation, Value};
-#[derive(Debug, Clone, Copy)]
-enum StackValue {
-    Int(isize),
-    Bool(bool),
-}
+use crate::vm::StackValue;
 #[derive(Debug, Clone, Copy)]
 pub enum Command {
     //computation
@@ -41,7 +37,7 @@ pub fn ir(root: AstNode, variables: &mut HashMap<String, usize>) -> Vec<Command>
         AstNode::Expression(expression) => {
             commands.append(&mut ir_expression(&expression, variables))
         }
-        AstNode::BlockVec(ast_nodes) => todo!(),
+        AstNode::BlockVec(_) => todo!(),
         AstNode::BlockCode(nodes) => {
             for node in nodes {
                 commands.append(&mut ir(node, variables));
@@ -55,12 +51,8 @@ fn ir_value(value: &Value, variables: &mut HashMap<String, usize>) -> Vec<Comman
     let mut commands = Vec::new();
     match value {
         Value::Name(s) => {
-            if variables.contains_key(s) {
-                commands.push(Command::Load(variables[s]));
-            } else {
-                variables.insert(s.clone(), variables.len());
-                commands.push(Command::Load(variables[s]));
-            }
+            register_variable(variables, s.clone());
+            commands.push(Command::Load(variables[s]));
         }
         Value::Number(x) => commands.push(Command::Put(StackValue::Int(*x))),
         Value::Expression(expr) => {
@@ -81,6 +73,17 @@ fn ir_expression(expression: &Expression, variables: &mut HashMap<String, usize>
                 command
             );
             match op {
+                Operation::Set => {
+                    assert_eq!(expression.left.len(), expression.right.len());
+                    for i in 0..expression.left.len() {
+                        assert!(matches!(expression.left[i], Value::Name(_)));
+                        commands.append(&mut ir_value(&expression.right[i], variables));
+                        commands.push(Command::Store(register_variable(
+                            variables,
+                            expression.left[i].get_name().unwrap(),
+                        )))
+                    }
+                }
                 Operation::Comparison(_) => {
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
@@ -109,6 +112,9 @@ fn ir_expression(expression: &Expression, variables: &mut HashMap<String, usize>
                             if idx > 0 {
                                 commands.push(Command::Add);
                             }
+                        }
+                        if expression.left.is_empty() {
+                            commands.push(Command::Put(StackValue::Int(0)));
                         }
                         for (idx, value) in expression.right.iter().enumerate() {
                             commands.append(&mut ir_value(value, variables));
@@ -139,6 +145,7 @@ fn ir_expression(expression: &Expression, variables: &mut HashMap<String, usize>
                                 commands.push(Command::Mul);
                             }
                         }
+
                         for (idx, value) in expression.right.iter().enumerate() {
                             commands.append(&mut ir_value(value, variables));
                             if idx > 0 {
@@ -179,8 +186,15 @@ fn ir_expression(expression: &Expression, variables: &mut HashMap<String, usize>
     }
     commands
 }
+fn register_variable(env: &mut HashMap<String, usize>, variable: String) -> usize {
+    if !env.contains_key(&variable) {
+        env.insert(variable.clone(), env.len());
+    }
+    env[&variable]
+}
 fn operation_to_command(op: Operation) -> Command {
     match op {
+        Operation::Set => Command::Store(0),
         Operation::Comparison(comparison) => match comparison {
             Comparison::Greater => Command::Gt,
             Comparison::Less => Command::Ls,

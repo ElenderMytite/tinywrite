@@ -1,214 +1,244 @@
-text: %((puk 1024 + somein 45 37 2) * 2) 3, # test comment
-5 >= 4,
-6 !> 6,
-7 !< 2,
-8 7 6 - 4 3 2,
--32,
-1 2 3 4 / 5 6 7 8,
+text: #%(( 1024 + 45 37 2) * 2) 3, # test comment
+#5 >= 4,
+#6 !> 6,
+#7 !< 2,
+#8 7 6 - 4 3 2,
+#-32,
+#1 2 3 4 / 8,
+cat = 5,
+dog = 3,
+(+ dog cat 7 cat),
 
-tokens: ["%", "(", "(", "puk", "1024", "+", "somein", "45", "37", "2", ")", "*", "2", ")", "3", ",", "5", ">=", "4", ",", "6", "!>", "6", ",", "7", "!<", "2", ",", "8", "7", "6", "-4", "3", "2", ",", "-32", ",", "1", "2", "3", "4", "/", "5", "6", "7", "8", ","]
+character: # writing mode: None, buffer: ""
+character: % writing mode: Comment, buffer: ""
+character: ( writing mode: Comment, buffer: ""
+character: ( writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 1 writing mode: Comment, buffer: ""
+character: 0 writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: 4 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: + writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 4 writing mode: Comment, buffer: ""
+character: 5 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 3 writing mode: Comment, buffer: ""
+character: 7 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: ) writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: * writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: ) writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 3 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: # writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: t writing mode: Comment, buffer: ""
+character: e writing mode: Comment, buffer: ""
+character: s writing mode: Comment, buffer: ""
+character: t writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: c writing mode: Comment, buffer: ""
+character: o writing mode: Comment, buffer: ""
+character: m writing mode: Comment, buffer: ""
+character: m writing mode: Comment, buffer: ""
+character: e writing mode: Comment, buffer: ""
+character: n writing mode: Comment, buffer: ""
+character: t writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: 5 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: > writing mode: Comment, buffer: ""
+character: = writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 4 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: 6 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: ! writing mode: Comment, buffer: ""
+character: > writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 6 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: 7 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: ! writing mode: Comment, buffer: ""
+character: < writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: 8 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 7 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 6 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: - writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 4 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 3 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: - writing mode: Comment, buffer: ""
+character: 3 writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: # writing mode: None, buffer: ""
+character: 1 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 2 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 3 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 4 writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: / writing mode: Comment, buffer: ""
+character:   writing mode: Comment, buffer: ""
+character: 8 writing mode: Comment, buffer: ""
+character: , writing mode: Comment, buffer: ""
+character: 
+ writing mode: Comment, buffer: ""
+character: c writing mode: None, buffer: ""
+character: a writing mode: Name, buffer: "c"
+character: t writing mode: Name, buffer: "ca"
+character:   writing mode: Name, buffer: "cat"
+character: = writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: 5 writing mode: None, buffer: ""
+character: , writing mode: Int, buffer: "5"
+buffer: "5"
+character: 
+ writing mode: None, buffer: ""
+character: d writing mode: None, buffer: ""
+character: o writing mode: Name, buffer: "d"
+character: g writing mode: Name, buffer: "do"
+character:   writing mode: Name, buffer: "dog"
+character: = writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: 3 writing mode: None, buffer: ""
+character: , writing mode: Int, buffer: "3"
+buffer: "3"
+character: 
+ writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: + writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: d writing mode: None, buffer: ""
+character: o writing mode: Name, buffer: "d"
+character: g writing mode: Name, buffer: "do"
+character:   writing mode: Name, buffer: "dog"
+character: c writing mode: None, buffer: ""
+character: a writing mode: Name, buffer: "c"
+character: t writing mode: Name, buffer: "ca"
+character:   writing mode: Name, buffer: "cat"
+character: 7 writing mode: None, buffer: ""
+character:   writing mode: Int, buffer: "7"
+buffer: "7"
+character: c writing mode: None, buffer: ""
+character: a writing mode: Name, buffer: "c"
+character: t writing mode: Name, buffer: "ca"
+character: ) writing mode: Name, buffer: "cat"
+character: , writing mode: None, buffer: ""
+character: 
+ writing mode: None, buffer: ""
+tokens: ["cat", "=", "5", ",", "dog", "=", "3", ",", "(", "+", "dog", "cat", "7", "cat", ")", ","]
 ast: BlockCode(
     [
         Expression(
             Expression {
                 operation: Some(
-                    Computation(
-                        Mod,
-                    ),
+                    Set,
                 ),
-                left: [],
+                left: [
+                    Name(
+                        "cat",
+                    ),
+                ],
                 right: [
+                    Number(
+                        5,
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: Some(
+                    Set,
+                ),
+                left: [
+                    Name(
+                        "dog",
+                    ),
+                ],
+                right: [
+                    Number(
+                        3,
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
                     Expression(
                         Expression {
                             operation: Some(
                                 Computation(
-                                    Mul,
+                                    Add,
                                 ),
                             ),
-                            left: [
-                                Expression(
-                                    Expression {
-                                        operation: Some(
-                                            Computation(
-                                                Add,
-                                            ),
-                                        ),
-                                        left: [
-                                            Name(
-                                                "puk",
-                                            ),
-                                            Number(
-                                                1024,
-                                            ),
-                                        ],
-                                        right: [
-                                            Name(
-                                                "somein",
-                                            ),
-                                            Number(
-                                                45,
-                                            ),
-                                            Number(
-                                                37,
-                                            ),
-                                            Number(
-                                                2,
-                                            ),
-                                        ],
-                                    },
-                                ),
-                            ],
+                            left: [],
                             right: [
+                                Name(
+                                    "dog",
+                                ),
+                                Name(
+                                    "cat",
+                                ),
                                 Number(
-                                    2,
+                                    7,
+                                ),
+                                Name(
+                                    "cat",
                                 ),
                             ],
                         },
                     ),
-                    Number(
-                        3,
-                    ),
-                ],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: Some(
-                    Comparison(
-                        GreaterOrEqual,
-                    ),
-                ),
-                left: [
-                    Number(
-                        5,
-                    ),
-                ],
-                right: [
-                    Number(
-                        4,
-                    ),
-                ],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: Some(
-                    Comparison(
-                        LessOrEqual,
-                    ),
-                ),
-                left: [
-                    Number(
-                        6,
-                    ),
-                ],
-                right: [
-                    Number(
-                        6,
-                    ),
-                ],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: Some(
-                    Comparison(
-                        GreaterOrEqual,
-                    ),
-                ),
-                left: [
-                    Number(
-                        7,
-                    ),
-                ],
-                right: [
-                    Number(
-                        2,
-                    ),
-                ],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: None,
-                left: [
-                    Number(
-                        8,
-                    ),
-                    Number(
-                        7,
-                    ),
-                    Number(
-                        6,
-                    ),
-                    Number(
-                        -4,
-                    ),
-                    Number(
-                        3,
-                    ),
-                    Number(
-                        2,
-                    ),
                 ],
                 right: [],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: None,
-                left: [
-                    Number(
-                        -32,
-                    ),
-                ],
-                right: [],
-            },
-        ),
-        Expression(
-            Expression {
-                operation: Some(
-                    Computation(
-                        Div,
-                    ),
-                ),
-                left: [
-                    Number(
-                        1,
-                    ),
-                    Number(
-                        2,
-                    ),
-                    Number(
-                        3,
-                    ),
-                    Number(
-                        4,
-                    ),
-                ],
-                right: [
-                    Number(
-                        5,
-                    ),
-                    Number(
-                        6,
-                    ),
-                    Number(
-                        7,
-                    ),
-                    Number(
-                        8,
-                    ),
-                ],
             },
         ),
     ],
 )
-right len: 0; left len: 2; command: Mod
-right len: 1; left len: 1; command: Mul
-right len: 2; left len: 4; command: Add
-right len: 1; left len: 1; command: Geq
-right len: 1; left len: 1; command: Leq
-right len: 1; left len: 1; command: Geq
-right len: 4; left len: 4; command: Div
-ir: [Load(0), Put(Int(1024)), Add, Load(1), Add, Put(Int(45)), Add, Put(Int(37)), Add, Put(Int(2)), Add, Put(Int(2)), Mul, Put(Int(3)), Mod, Cls, Put(Int(5)), Put(Int(4)), Geq, Cls, Put(Int(6)), Put(Int(6)), Leq, Cls, Put(Int(7)), Put(Int(2)), Geq, Cls, Cls, Put(Int(-32)), Cls, Put(Int(1)), Put(Int(2)), Mul, Put(Int(3)), Mul, Put(Int(4)), Mul, Put(Int(5)), Put(Int(6)), Mul, Put(Int(7)), Mul, Put(Int(8)), Mul, Div, Cls]
+right len: 1; left len: 1; command: Store(0)
+right len: 1; left len: 1; command: Store(0)
+right len: 0; left len: 4; command: Add
+ir: [Put(Int(5)), Store(0), Cls, Put(Int(3)), Store(1), Cls, Load(1), Load(0), Add, Put(Int(7)), Add, Load(0), Add, Cls]
+Int(20)

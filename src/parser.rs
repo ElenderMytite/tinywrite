@@ -22,11 +22,20 @@ pub enum Value {
     Number(isize),
     Expression(Expression),
 }
+impl Value {
+    pub fn get_name(&self) -> Result<String, ()> {
+        match &self {
+            Self::Name(s) => Ok(s.clone()),
+            _ => Err(()),
+        }
+    }
+}
 #[derive(Debug, Clone, Copy)]
 pub enum Operation {
     Comparison(Comparison),
     Computation(Computation),
     Logic(Logic),
+    Set,
 }
 #[derive(Debug, Clone)]
 enum Part {
@@ -94,7 +103,9 @@ pub fn astify(
             }
             "," => match block_type {
                 ParsingMode::Expression => {
-                    buffer.push(Part::Node(AstNode::Expression(parse_expression(&buffer))));
+                    let expr = Part::Node(AstNode::Expression(parse_expression(&buffer)));
+                    buffer.clear();
+                    buffer.push(expr);
                 }
                 ParsingMode::BlockCode | ParsingMode::BlockVec => {
                     if !buffer.is_empty() {
@@ -114,6 +125,9 @@ pub fn astify(
                 if block_type == ParsingMode::BlockVec {
                     return Ok(AstNode::BlockVec(nodes));
                 }
+            }
+            "=" => {
+                buffer.push(Part::Operation(Operation::Set));
             }
             "+" => {
                 buffer.push(Part::Operation(Operation::Computation(Computation::Add)));

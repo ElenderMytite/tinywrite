@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+#[derive(Debug)]
 enum WritingMode {
     None,
     Comment,
@@ -11,6 +12,10 @@ pub fn tokenize(text: &str) -> Vec<String> {
     let mut mode: WritingMode = WritingMode::None;
     let mut buffer: String = String::new();
     for c in text.chars() {
+        println!(
+            "character: {} writing mode: {:?}, buffer: {:?}",
+            c, mode, buffer
+        );
         match mode {
             WritingMode::Comment => {
                 if c != '\n' {
@@ -30,6 +35,7 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 }
             }
             WritingMode::Int => {
+                println!("buffer: {buffer:?}");
                 if c == '_' {
                     continue;
                 } else if c.is_numeric() {
@@ -60,7 +66,9 @@ pub fn tokenize(text: &str) -> Vec<String> {
             _ if c.is_ascii_punctuation() => {
                 tokens.push(format!("{}", c));
             }
-            _ => (),
+            _ => {
+                mode = WritingMode::None;
+            }
         }
     }
     combine_tokens(tokens)
@@ -78,15 +86,6 @@ fn combine_tokens(tokens: Vec<String>) -> Vec<String> {
     let mut out = Vec::with_capacity(tokens.len());
     let mut i = 0;
     while i < tokens.len() {
-        if tokens[i] == "-"
-            && i + 1 < tokens.len()
-            && tokens[i + 1].chars().all(|c| c.is_ascii_digit())
-        {
-            out.push(format!("-{}", tokens[i + 1]));
-            i += 2;
-            continue;
-        }
-
         if i + 1 < tokens.len() {
             let pair = format!("{}{}", tokens[i], tokens[i + 1]);
             if two_char_pairs.contains(pair.as_str()) {
