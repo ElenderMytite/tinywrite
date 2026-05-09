@@ -1,4 +1,73 @@
-text: (somein puk = 4 5)
-(%((puk 1024 + somein 45 37 2) * 2) 3)
+text: (%((puk 1024 + somein 45 37 2) * 2) 3) # test comment
 
-tokens: ["(", "somein", "puk", "=", "4", "5", ")", "(", "%", "(", "(", "puk", "1024", "+", "somein", "45", "37", "2", ")", "*", "2", ")", "3", ")"]
+tokens: ["(", "%", "(", "(", "puk", "1024", "+", "somein", "45", "37", "2", ")", "*", "2", ")", "3", ")"]
+ast: BlockCode(
+    [
+        Expression(
+            Expression {
+                operation: Some(
+                    Computation(
+                        Mod,
+                    ),
+                ),
+                left: [],
+                right: [
+                    Expression(
+                        Expression {
+                            operation: Some(
+                                Computation(
+                                    Mul,
+                                ),
+                            ),
+                            left: [
+                                Expression(
+                                    Expression {
+                                        operation: Some(
+                                            Computation(
+                                                Add,
+                                            ),
+                                        ),
+                                        left: [
+                                            Name(
+                                                "puk",
+                                            ),
+                                            Number(
+                                                1024,
+                                            ),
+                                        ],
+                                        right: [
+                                            Name(
+                                                "somein",
+                                            ),
+                                            Number(
+                                                45,
+                                            ),
+                                            Number(
+                                                37,
+                                            ),
+                                            Number(
+                                                2,
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            ],
+                            right: [
+                                Number(
+                                    2,
+                                ),
+                            ],
+                        },
+                    ),
+                    Number(
+                        3,
+                    ),
+                ],
+            },
+        ),
+    ],
+)
+right len: 0; left len: 2; command: Mod
+right len: 1; left len: 1; command: Mul
+right len: 2; left len: 4; command: Add
+ir: [Load(0), Put(Int(1024)), Add, Load(1), Add, Put(Int(45)), Add, Put(Int(37)), Add, Put(Int(2)), Add, Put(Int(2)), Mul, Put(Int(3)), Mod]

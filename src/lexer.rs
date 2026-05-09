@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 enum WritingMode {
     None,
+    Comment,
     Name,
     Int,
 }
@@ -11,6 +12,13 @@ pub fn tokenize(text: &str) -> Vec<String> {
     let mut buffer: String = String::new();
     for c in text.chars() {
         match mode {
+            WritingMode::Comment => {
+                if c != '\n' {
+                    continue;
+                } else {
+                    mode = WritingMode::None;
+                }
+            }
             WritingMode::Name => {
                 if c.is_alphanumeric() || c == '_' {
                     buffer.push(c);
@@ -40,6 +48,9 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 buffer.clear();
                 buffer.push(c);
                 mode = WritingMode::Name;
+            }
+            '#' => {
+                mode = WritingMode::Comment;
             }
             _ if c.is_numeric() => {
                 buffer.clear();
