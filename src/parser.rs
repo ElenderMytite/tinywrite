@@ -7,23 +7,31 @@ pub enum ParsingMode {
 }
 #[derive(Debug, Clone)]
 pub enum AstNode {
-    Expression(Operation),
+    Expression(Expression),
     BlockVec(Vec<AstNode>),
     BlockCode(Vec<AstNode>),
 }
 #[derive(Debug, Clone)]
-pub enum Operation {
-    Comparison(Comparison, Rc<Option<Operation>>,Rc<Option<Operation>>),
-    Computation(Computation, Rc<Option<Operation>>, Rc<Option<Operation>>),
-    Logic(Logic, Rc<Option<Operation>>, Rc<Option<Operation>>),
-    Name(String),
-    Number(isize),
+pub struct Expression {
+    pub operation: Option<Operation>,
+    pub left: Vec<Value>,
+    pub right: Vec<Value>,
 }
 #[derive(Debug, Clone)]
-enum Part {
+pub enum Value {
+    Name(String),
+    Number(isize),
+    Expression(Expression),
+}
+#[derive(Debug, Clone, Copy)]
+pub enum Operation {
     Comparison(Comparison),
     Computation(Computation),
     Logic(Logic),
+}
+#[derive(Debug, Clone)]
+enum Part {
+    Operation(Operation),
     Node(AstNode),
     Name(String),
     Number(isize),
@@ -54,14 +62,20 @@ pub enum Logic {
     Nor,
     Not,
 }
-pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) -> Result<AstNode, String> {
+pub fn astify(
+    tokens: &Vec<String>,
+    block_type: ParsingMode,
+    index: &mut usize,
+) -> Result<AstNode, String> {
     let mut buffer: Vec<Part> = Vec::new();
     let mut nodes: Vec<AstNode> = Vec::new();
     while *index < tokens.len() {
         match tokens[*index].as_str() {
             "(" => {
                 *index += 1;
-                buffer.push(Part::Node(astify(tokens, ParsingMode::Expression, index).unwrap()));
+                buffer.push(Part::Node(
+                    astify(tokens, ParsingMode::Expression, index).unwrap(),
+                ));
             }
             "{" => {
                 *index += 1;
@@ -75,7 +89,7 @@ pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) 
                 if block_type == ParsingMode::Expression {
                     let node = parse_expression(&buffer);
                     // println!("parsed expression: {:?}", node);
-                    return Ok(node);
+                    return Ok(AstNode::Expression(node));
                 }
             }
             "}" => {
@@ -89,58 +103,62 @@ pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) 
                 }
             }
             "+" => {
-                buffer.push(Part::Computation(Computation::Add));    
+                buffer.push(Part::Operation(Operation::Computation(Computation::Add)));
             }
             "-" => {
-                buffer.push(Part::Computation(Computation::Sub));    
+                buffer.push(Part::Operation(Operation::Computation(Computation::Sub)));
             }
             "*" => {
-                buffer.push(Part::Computation(Computation::Mul));
+                buffer.push(Part::Operation(Operation::Computation(Computation::Mul)));
             }
             "/" => {
-                buffer.push(Part::Computation(Computation::Div));
+                buffer.push(Part::Operation(Operation::Computation(Computation::Div)));
             }
             "%" => {
-                buffer.push(Part::Computation(Computation::Mod));
+                buffer.push(Part::Operation(Operation::Computation(Computation::Mod)));
             }
             "|" => {
-                buffer.push(Part::Logic(Logic::Or));
+                buffer.push(Part::Operation(Operation::Logic(Logic::Or)));
             }
             "&" => {
-                buffer.push(Part::Logic(Logic::And));
+                buffer.push(Part::Operation(Operation::Logic(Logic::And)));
             }
             "^" => {
-                buffer.push(Part::Logic(Logic::Xor));
+                buffer.push(Part::Operation(Operation::Logic(Logic::Xor)));
             }
             "!" => {
-                buffer.push(Part::Logic(Logic::Not));
+                buffer.push(Part::Operation(Operation::Logic(Logic::Not)));
             }
             "==" | "!^" => {
-                buffer.push(Part::Comparison(Comparison::Equal));
+                buffer.push(Part::Operation(Operation::Comparison(Comparison::Equal)));
             }
             "!=" => {
-                buffer.push(Part::Comparison(Comparison::NotEqual));
+                buffer.push(Part::Operation(Operation::Comparison(Comparison::NotEqual)));
             }
             ">" => {
-                buffer.push(Part::Comparison(Comparison::Greater));
+                buffer.push(Part::Operation(Operation::Comparison(Comparison::Greater)));
             }
             "<" => {
-                buffer.push(Part::Comparison(Comparison::Less));
+                buffer.push(Part::Operation(Operation::Comparison(Comparison::Less)));
             }
             ">=" | "=>" | "!<" | "<!" => {
-                buffer.push(Part::Comparison(Comparison::GreaterOrEqual));
+                buffer.push(Part::Operation(Operation::Comparison(
+                    Comparison::GreaterOrEqual,
+                )));
             }
             "<=" | "=<" | "!>" | ">!" => {
-                buffer.push(Part::Comparison(Comparison::LessOrEqual));
+                buffer.push(Part::Operation(Operation::Comparison(
+                    Comparison::LessOrEqual,
+                )));
             }
             "!&" => {
-                buffer.push(Part::Logic(Logic::Nand));
+                buffer.push(Part::Operation(Operation::Logic(Logic::Nand)));
             }
             "!|" => {
-                buffer.push(Part::Logic(Logic::Nor));
+                buffer.push(Part::Operation(Operation::Logic(Logic::Nor)));
             }
-            x if x.chars().all(|c| c.is_numeric()) | 
-            (x.starts_with("-") && x[1..].chars().all(|c| c.is_numeric())) =>
+            x if x.chars().all(|c| c.is_numeric())
+                | (x.starts_with("-") && x[1..].chars().all(|c| c.is_numeric())) =>
             {
                 buffer.push(Part::Number(x.parse::<isize>().unwrap()));
             }
@@ -148,7 +166,7 @@ pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) 
                 buffer.push(Part::Name(x.to_string()));
             }
 
-            x => panic!("unexpected token: \"{x}\"")
+            x => panic!("unexpected token: \"{x}\""),
         }
         // println!("buffer: {:?}", buffer);
         // println!("index: {}", *index);
@@ -158,7 +176,7 @@ pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) 
         for part in buffer {
             match part {
                 Part::Node(n) => nodes.push(n),
-                _ => panic!("unexpected part in buffer at end of tokens: {:?}", part)
+                _ => panic!("unexpected part in buffer at end of tokens: {:?}", part),
             }
         }
     }
@@ -168,68 +186,48 @@ pub fn astify(tokens: &Vec<String>, block_type: ParsingMode, index: &mut usize) 
         ParsingMode::BlockVec => Ok(AstNode::BlockVec(nodes)),
     }
 }
-fn parse_expression(buffer: &Vec<Part>) -> AstNode {
+fn parse_expression(buffer: &Vec<Part>) -> Expression {
     let mut idx = 0;
     // println!("parsing expression from: {:?}", buffer);
-    let mut left: Option<Part> = None;
-    let mut right: Option<Part> = None;
-    let mut operation: Option<Part> = None;
+    let mut left: Vec<Part> = Vec::new();
+    let mut right: Vec<Part> = Vec::new();
+    let mut operation: Option<Operation> = None;
     while idx < buffer.len() {
         match buffer[idx] {
-            Part::Comparison(_) | Part::Logic(_) | Part::Computation(_) => {
+            Part::Operation(op) => {
                 if operation.is_none() {
-                    operation = Some(buffer[idx].clone());
+                    operation = Some(op);
+                } else {
+                    panic!("Second operation inside one paren found while parsing ")
                 }
             }
-            Part::Name(_) | Part::Number(_) | Part::Node(_)=> {
-                if left.is_none() {
-                    left = Some(buffer[idx].clone());
-                } else if right.is_none() {
-                    right = Some(buffer[idx].clone());
+            Part::Name(_) | Part::Number(_) | Part::Node(_) => {
+                if operation.is_none() {
+                    left.push(buffer[idx].clone());
+                } else {
+                    right.push(buffer[idx].clone());
                 }
             }
         }
         idx += 1;
     }
-    match operation {
-    Some(x) => {
-        let left_node: Option<Operation> = get_value_from_part(left);
-        let right_node = get_value_from_part(right);
-        match x {
-            Part::Comparison(c) => AstNode::Expression(Operation::Comparison(c, 
-                    Rc::new(left_node), Rc::new(right_node))),
-            Part::Computation(c) => AstNode::Expression(Operation::Computation(c, 
-                    Rc::new(left_node), Rc::new(right_node))),
-            Part::Logic(l) => AstNode::Expression(Operation::Logic(l, 
-                    Rc::new(left_node), Rc::new(right_node))),
-            _ => panic!("unexpected operation: {:?}", x)
-        }
-    }
-    None => {
-        match left {
-            Some(x) => {
-                match x {
-                    Part::Name(n) => AstNode::Expression(Operation::Name(n)),
-                    Part::Number(n) => AstNode::Expression(Operation::Number(n)),
-                    Part::Node(n) => n,
-                    _ => panic!("unexpected part: {:?}", x)
-                }
-            }
-            None => panic!("no left operand found")
-            
-        }
+    Expression {
+        operation,
+        left: parse_unaries(&left),
+        right: parse_unaries(&right),
     }
 }
-}
-fn get_value_from_part(part: Option<Part>) -> Option<Operation> {
-    part.map(|pa| match pa {
-            Part::Name(n) => Operation::Name(n),
-            Part::Number(n) => Operation::Number(n),
+fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
+    buffer
+        .iter()
+        .map(|part| match part.clone() {
+            Part::Name(s) => Value::Name(s),
+            Part::Number(x) => Value::Number(x),
             Part::Node(n) => match n {
-                AstNode::Expression(op) => op,
-                _ => panic!("unexpected node type: {:?}", n)
+                AstNode::Expression(expr) => Value::Expression(expr),
+                _ => panic!("Block found while parsing unary expression"),
             },
-            _ => panic!("unexpected part: {:?}", pa)
+            _ => panic!("can't parse unary expression"),
         })
-
+        .collect()
 }

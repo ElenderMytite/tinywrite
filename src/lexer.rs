@@ -57,7 +57,8 @@ pub fn tokenize(text: &str) -> Vec<String> {
 
 fn combine_tokens(tokens: Vec<String>) -> Vec<String> {
     let two_char_pairs: HashSet<&'static str> = [
-        "==", "!=", "=!", "=<", "=>", "<=", "<!", ">=", ">!", "!<", "!>", "!&", "!|", "!^",
+        "==", "!=", "=!", "=<", "=>", "<=", "<!", ">=", ">!", "!<", "!>", "!&", "!|",
+        "!^", // order shall not matter; ! inverts
     ]
     .iter()
     .copied()
