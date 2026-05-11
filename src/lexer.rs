@@ -12,10 +12,10 @@ pub fn tokenize(text: &str) -> Vec<String> {
     let mut mode: WritingMode = WritingMode::None;
     let mut buffer: String = String::new();
     for c in text.chars() {
-        println!(
-            "character: {} writing mode: {:?}, buffer: {:?}",
-            c, mode, buffer
-        );
+        // println!(
+        //     "character: {} writing mode: {:?}, buffer: {:?}",
+        //     c, mode, buffer
+        // );
         match mode {
             WritingMode::Comment => {
                 if c != '\n' {
@@ -35,7 +35,6 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 }
             }
             WritingMode::Int => {
-                println!("buffer: {buffer:?}");
                 if c == '_' {
                     continue;
                 } else if c.is_numeric() {

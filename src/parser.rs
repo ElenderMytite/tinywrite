@@ -28,18 +28,20 @@ impl Value {
         }
     }
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Operation {
     Comparison(Comparison),
     Computation(Computation),
     Logic(Logic),
     Vector(VectorOp),
+    Call(String),
     Set,
 }
 #[derive(Debug, Clone)]
 enum Part {
     Operation(Operation),
     Node(AstNode),
+    Call,
     Name(String),
     Number(isize),
 }
@@ -122,6 +124,7 @@ pub fn astify(
                 }
             },
             "=" => buffer.push(Part::Operation(Operation::Set)),
+            ":" => buffer.push(Part::Call),
             "+" => buffer.push(Part::Operation(Operation::Computation(Computation::Add))),
             "-" => buffer.push(Part::Operation(Operation::Computation(Computation::Sub))),
             "*" => buffer.push(Part::Operation(Operation::Computation(Computation::Mul))),
@@ -180,7 +183,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
     let mut right: Vec<Part> = Vec::new();
     let mut operation: Option<Operation> = None;
     while idx < buffer.len() {
-        match buffer[idx] {
+        match buffer[idx].clone() {
             Part::Operation(op) => {
                 if operation.is_none() {
                     operation = Some(op);
@@ -193,6 +196,18 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                     left.push(buffer[idx].clone());
                 } else {
                     right.push(buffer[idx].clone());
+                }
+            }
+            Part::Call => {
+                idx += 1;
+                if idx < buffer.len() {
+                    if let Part::Name(func) = buffer[idx].clone() {
+                        operation = Some(Operation::Call(func));
+                    } else {
+                        panic!("Expected function name after call operator!");
+                    }
+                } else {
+                    panic!("Unexpected end of tokens after call operator!");
                 }
             }
         }

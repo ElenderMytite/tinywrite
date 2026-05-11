@@ -96,6 +96,12 @@ pub(super) fn ir_iteration(
                             commands
                                 .push(operation_to_command(Operation::Logic(logic_op)).unwrap());
                         }
+                        None => {
+                            // just push the value at idx to the stack
+                            commands.push(Command::Load(vec_ptr));
+                            commands.push(Command::Load(idx));
+                            commands.push(Command::Get);
+                        }
                         _ => panic!("Unsupported outer operation for vector unpacking!"),
                     };
                     // exit condition: idx + 1 < len(vector) (next iteration will try to access idx + 1, so we need to check if it's out of bounds)

@@ -10,18 +10,81 @@ pub(super) fn ir_expression(
     outer: Option<Operation>,
 ) -> Vec<Command> {
     let mut commands = Vec::new();
-    match expression.operation {
+    match expression.operation.clone() {
         Some(op) => {
-            let command = operation_to_command(op);
-            println!(
-                "right len: {}; left len: {}; command: {:?}",
-                expression.left.len(),
-                expression.right.len(),
-                command
-            );
+            let command = operation_to_command(op.clone());
+            // println!(
+            //     "right len: {}; left len: {}; command: {:?}",
+            //     expression.left.len(),
+            //     expression.right.len(),
+            //     command
+            // );
             match op {
                 Operation::Vector(_) => {
                     commands.append(&mut ir_iteration(expression, variables, index + 1, outer));
+                }
+                Operation::Call(func) => {
+                    match func.as_str() {
+                        "push" | "get" => {
+                            assert_eq!(expression.left.len(), 1);
+                            commands.push(Command::Load(register_variable(
+                                variables,
+                                expression.left[0].get_name().unwrap(),
+                            )));
+                        }
+                        "len" | "pop" => {
+                            assert_eq!(expression.left.len() + expression.right.len(), 1);
+                            if expression.left.len() == 1 {
+                                commands.push(Command::Load(register_variable(
+                                    variables,
+                                    expression.left[0].get_name().unwrap(),
+                                )));
+                            } else {
+                                commands.push(Command::Load(register_variable(
+                                    variables,
+                                    expression.right[0].get_name().unwrap(),
+                                )));
+                            }
+                            commands.push(command.clone().unwrap());
+                            return commands;
+                        }
+                        _ => {
+                            panic!("Unsupported function call found!");
+                        }
+                    }
+                    for value in expression
+                        .left
+                        .iter()
+                        .skip(1)
+                        .chain(expression.right.iter())
+                    {
+                        // special prepraration for commands that consume the pointer to the vector (get command),
+                        match command {
+                            Ok(Command::Get) => commands.push(Command::Dup),
+                            _ => (),
+                        }
+                        commands.append(&mut ir_value(
+                            value,
+                            variables,
+                            index + commands.len(),
+                            None,
+                        ));
+                        match command {
+                            Ok(Command::Push | Command::Pop | Command::Get | Command::Len) => {
+                                commands.push(command.clone().unwrap());
+                            }
+                            _ => panic!("Unsupported function call found!"),
+                        }
+                        // special post-preparation for commands that put values on top of the stack (get command),
+                        match command {
+                            Ok(Command::Get) => commands.push(Command::Swap),
+                            _ => (),
+                        }
+                    }
+                    match command {
+                        Ok(Command::Get) => commands.push(Command::Del),
+                        _ => (),
+                    }
                 }
                 Operation::Set => {
                     assert_eq!(expression.left.len(), expression.right.len());
@@ -65,33 +128,31 @@ pub(super) fn ir_expression(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
                         }
                         commands.push(command.unwrap());
                     }
                     Computation::Sub => {
-                        for (idx, value) in expression.left.iter().enumerate() {
+                        commands.push(Command::Put(StackValue::Int(0)));
+                        for value in expression.left.iter() {
                             commands.append(&mut ir_value(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
-                            if idx > 0 {
-                                commands.push(Command::Add);
-                            }
+                            commands.push(Command::Add);
                         }
-                        for (idx, value) in expression.right.iter().enumerate() {
+                        commands.push(Command::Put(StackValue::Int(0)));
+                        for value in expression.right.iter() {
                             commands.append(&mut ir_value(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
-                            if idx > 0 {
-                                commands.push(Command::Add);
-                            }
+                            commands.push(Command::Add);
                         }
                         commands.push(command.unwrap());
                     }
@@ -102,34 +163,31 @@ pub(super) fn ir_expression(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
                         }
                         commands.push(command.unwrap());
                     }
                     Computation::Div => {
-                        for (idx, value) in expression.left.iter().enumerate() {
+                        commands.push(Command::Put(StackValue::Int(1)));
+                        for value in expression.left.iter() {
                             commands.append(&mut ir_value(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
-                            if idx > 0 {
-                                commands.push(Command::Mul);
-                            }
+                            commands.push(Command::Mul);
                         }
-
-                        for (idx, value) in expression.right.iter().enumerate() {
+                        commands.push(Command::Put(StackValue::Int(1)));
+                        for value in expression.right.iter() {
                             commands.append(&mut ir_value(
                                 value,
                                 variables,
                                 index + commands.len(),
-                                Some(op),
+                                Some(op.clone()),
                             ));
-                            if idx > 0 {
-                                commands.push(Command::Mul);
-                            }
+                            commands.push(Command::Mul);
                         }
                         commands.push(command.unwrap());
                     }
@@ -158,7 +216,7 @@ pub(super) fn ir_expression(
                             value,
                             variables,
                             index + commands.len(),
-                            Some(op),
+                            Some(op.clone()),
                         ));
                         if idx != 0 {
                             commands.push(command.clone().unwrap());

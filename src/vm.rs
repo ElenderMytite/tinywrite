@@ -79,9 +79,20 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                 assert!(!stack.is_empty());
                 stack.push(stack.last().unwrap().clone());
             }
+            Command::Del => {
+                assert!(!stack.is_empty());
+                stack.pop();
+            }
+            Command::Swap => {
+                assert!(stack.len() >= 2);
+                let b = stack.pop().unwrap();
+                let a = stack.pop().unwrap();
+                stack.push(b);
+                stack.push(a);
+            }
             Command::Cls => {
                 for element in stack.iter() {
-                    println!("{:?}", element);
+                    println!("{}", print_value(element));
                 }
                 stack.clear()
             }
@@ -218,7 +229,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
             }
             Command::Pop => {
                 assert!(stack.len() >= 1);
-                let vector = stack.last().unwrap();
+                let vector = stack.pop().unwrap();
                 match vector {
                     StackValue::Vector(vec) => {
                         let element = vec.borrow_mut().pop().unwrap();
@@ -233,14 +244,32 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                 let vector = stack.pop().unwrap();
                 match vector {
                     StackValue::Vector(vec) => {
-                        let element =
-                            vec.borrow()[(index % (vec.borrow().len() as isize)) as usize].clone();
+                        let element = vec.borrow()[((index % (vec.borrow().len() as isize)
+                            + vec.borrow().len() as isize)
+                            % vec.borrow().len() as isize)
+                            as usize]
+                            .clone();
                         stack.push(element);
                     }
-                    _ => panic!("expected vector on the stack"),
+                    val => panic!("expected vector on the stack, found {val:?}"),
                 }
             }
         }
         ip += 1;
+    }
+}
+fn print_value(value: &StackValue) -> String {
+    match value {
+        StackValue::None => "None".to_string(),
+        StackValue::Int(x) => x.to_string(),
+        StackValue::Bool(b) => b.to_string(),
+        StackValue::Vector(vec) => format!(
+            "[{}]",
+            vec.borrow()
+                .iter()
+                .map(|v| print_value(v))
+                .collect::<Vec<String>>()
+                .join(", ")
+        ),
     }
 }

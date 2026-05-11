@@ -14,6 +14,8 @@ pub enum Command {
     Mod,
     // stack operations
     Dup,
+    Del,
+    Swap,
     Put(StackValue),
     Cls,
     // comparison
@@ -110,7 +112,13 @@ fn operation_to_command(op: Operation) -> Result<Command, String> {
             Logic::Nor => Command::Nor,
             Logic::Not => Command::Not,
         }),
-
+        Operation::Call(func) => match func.as_str() {
+            "push" => Ok(Command::Push),
+            "pop" => Ok(Command::Pop),
+            "get" => Ok(Command::Get),
+            "len" => Ok(Command::Len),
+            _ => Err("unknown function".to_string()),
+        },
         _ => Err("Unsupported operation in ir generation!".to_string()),
     }
 }

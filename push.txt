@@ -1,0 +1,6 @@
+part = (1 2 3,,);
+part :push 6 0 (-6);
+part :get 0 3 (-2);
+part :len;
+part :pop;
+part :len;
