@@ -43,7 +43,8 @@ pub enum Command {
     New,
     // pushes the top of the stack to the vector below it on the stack
     Push,
-
+    // pops the vector on the top of the stack and puts the result to the stack
+    Pop,
     // pops the index from the stack, copies the vector below it on the stack, pushes the value at the index to the stack
     Get,
 }

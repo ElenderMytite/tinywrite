@@ -119,7 +119,7 @@ pub(super) fn ir_iteration(
                     }
                 }
                 free_variable(variables, format!("--vec-{v_idx}"));
-                free_variable(variables, format!("--idx-{idx}"));
+                free_variable(variables, format!("--idx-{k_idx}"));
             }
             VectorOp::Pack => {
                 commands.push(Command::New);
