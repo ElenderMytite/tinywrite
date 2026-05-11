@@ -28,8 +28,9 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
     let mut env: Vec<StackValue> = vec![StackValue::None; capacity.unwrap_or(0)];
     let mut stack: Vec<StackValue> = Vec::new();
     while ip < code.len() {
-        println!("stack: {stack:?}");
-        println!("op: {:?}", code[ip].clone());
+        // println!("stack: {stack:?}");
+        // println!("ip: {}", ip);
+        // println!("op: {:?}", code[ip].clone());
         match code[ip].clone() {
             Command::Add => {
                 assert!(stack.len() >= 2);
@@ -212,17 +213,17 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     _ => panic!("expected vector on the stack"),
                 }
             }
-            Command::Pop => {
-                assert!(stack.len() >= 1);
-                let vector = stack.last().unwrap();
-                match vector {
-                    StackValue::Vector(vec) => {
-                        let element = vec.borrow_mut().pop().unwrap();
-                        stack.push(element);
-                    }
-                    _ => panic!("expected vector on the stack"),
-                }
-            }
+            // Command::Pop => {
+            //     assert!(stack.len() >= 1);
+            //     let vector = stack.last().unwrap();
+            //     match vector {
+            //         StackValue::Vector(vec) => {
+            //             let element = vec.borrow_mut().pop().unwrap();
+            //             stack.push(element);
+            //         }
+            //         _ => panic!("expected vector on the stack"),
+            //     }
+            // }
             Command::Get => {
                 assert!(stack.len() >= 2);
                 let index = stack.pop().unwrap().int().unwrap();

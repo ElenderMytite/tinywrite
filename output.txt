@@ -1,15 +1,20 @@
 ["vector.txt"]
 executing file: vector.txt
-text: vec = [1 2 3 7 8 32 101,,];
-(+ [vec ..]);
+text: vec1 = (1 2 3 7 8 32 101,,);
+vec2 = (4 5 6 9 10 33 102,,);
+(+ (vec1 vec2 ..));
+(* (vec1 vec2 ..));
+((.. vec2) *);
+(* (vec1 ..));
 
 character: v writing mode: None, buffer: ""
 character: e writing mode: Name, buffer: "v"
 character: c writing mode: Name, buffer: "ve"
-character:   writing mode: Name, buffer: "vec"
+character: 1 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec1"
 character: = writing mode: None, buffer: ""
 character:   writing mode: None, buffer: ""
-character: [ writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
 character: 1 writing mode: None, buffer: ""
 character:   writing mode: Int, buffer: "1"
 buffer: "1"
@@ -38,26 +43,127 @@ buffer: "10"
 character: , writing mode: Int, buffer: "101"
 buffer: "101"
 character: , writing mode: None, buffer: ""
-character: ] writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ; writing mode: None, buffer: ""
+character: 
+ writing mode: None, buffer: ""
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 2 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec2"
+character: = writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: 4 writing mode: None, buffer: ""
+character:   writing mode: Int, buffer: "4"
+buffer: "4"
+character: 5 writing mode: None, buffer: ""
+character:   writing mode: Int, buffer: "5"
+buffer: "5"
+character: 6 writing mode: None, buffer: ""
+character:   writing mode: Int, buffer: "6"
+buffer: "6"
+character: 9 writing mode: None, buffer: ""
+character:   writing mode: Int, buffer: "9"
+buffer: "9"
+character: 1 writing mode: None, buffer: ""
+character: 0 writing mode: Int, buffer: "1"
+buffer: "1"
+character:   writing mode: Int, buffer: "10"
+buffer: "10"
+character: 3 writing mode: None, buffer: ""
+character: 3 writing mode: Int, buffer: "3"
+buffer: "3"
+character:   writing mode: Int, buffer: "33"
+buffer: "33"
+character: 1 writing mode: None, buffer: ""
+character: 0 writing mode: Int, buffer: "1"
+buffer: "1"
+character: 2 writing mode: Int, buffer: "10"
+buffer: "10"
+character: , writing mode: Int, buffer: "102"
+buffer: "102"
+character: , writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
 character: ; writing mode: None, buffer: ""
 character: 
  writing mode: None, buffer: ""
 character: ( writing mode: None, buffer: ""
 character: + writing mode: None, buffer: ""
 character:   writing mode: None, buffer: ""
-character: [ writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
 character: v writing mode: None, buffer: ""
 character: e writing mode: Name, buffer: "v"
 character: c writing mode: Name, buffer: "ve"
-character:   writing mode: Name, buffer: "vec"
+character: 1 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec1"
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 2 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec2"
 character: . writing mode: None, buffer: ""
 character: . writing mode: None, buffer: ""
-character: ] writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
 character: ) writing mode: None, buffer: ""
 character: ; writing mode: None, buffer: ""
 character: 
  writing mode: None, buffer: ""
-tokens: ["vec", "=", "[", "1", "2", "3", "7", "8", "32", "101", ",,", "]", ";", "(", "+", "[", "vec", "..", "]", ")", ";"]
+character: ( writing mode: None, buffer: ""
+character: * writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 1 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec1"
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 2 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec2"
+character: . writing mode: None, buffer: ""
+character: . writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ; writing mode: None, buffer: ""
+character: 
+ writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: . writing mode: None, buffer: ""
+character: . writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 2 writing mode: Name, buffer: "vec"
+character: ) writing mode: Name, buffer: "vec2"
+character:   writing mode: None, buffer: ""
+character: * writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ; writing mode: None, buffer: ""
+character: 
+ writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: * writing mode: None, buffer: ""
+character:   writing mode: None, buffer: ""
+character: ( writing mode: None, buffer: ""
+character: v writing mode: None, buffer: ""
+character: e writing mode: Name, buffer: "v"
+character: c writing mode: Name, buffer: "ve"
+character: 1 writing mode: Name, buffer: "vec"
+character:   writing mode: Name, buffer: "vec1"
+character: . writing mode: None, buffer: ""
+character: . writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ) writing mode: None, buffer: ""
+character: ; writing mode: None, buffer: ""
+character: 
+ writing mode: None, buffer: ""
+tokens: ["vec1", "=", "(", "1", "2", "3", "7", "8", "32", "101", ",,", ")", ";", "vec2", "=", "(", "4", "5", "6", "9", "10", "33", "102", ",,", ")", ";", "(", "+", "(", "vec1", "vec2", "..", ")", ")", ";", "(", "*", "(", "vec1", "vec2", "..", ")", ")", ";", "(", "(", "..", "vec2", ")", "*", ")", ";", "(", "*", "(", "vec1", "..", ")", ")", ";"]
 ast: BlockCode(
     [
         Expression(
@@ -67,12 +173,12 @@ ast: BlockCode(
                 ),
                 left: [
                     Name(
-                        "vec",
+                        "vec1",
                     ),
                 ],
                 right: [
-                    IterationExpr(
-                        IterationExpr {
+                    Expression(
+                        Expression {
                             operation: Some(
                                 Vector(
                                     Pack,
@@ -109,6 +215,53 @@ ast: BlockCode(
         ),
         Expression(
             Expression {
+                operation: Some(
+                    Set,
+                ),
+                left: [
+                    Name(
+                        "vec2",
+                    ),
+                ],
+                right: [
+                    Expression(
+                        Expression {
+                            operation: Some(
+                                Vector(
+                                    Pack,
+                                ),
+                            ),
+                            left: [
+                                Number(
+                                    4,
+                                ),
+                                Number(
+                                    5,
+                                ),
+                                Number(
+                                    6,
+                                ),
+                                Number(
+                                    9,
+                                ),
+                                Number(
+                                    10,
+                                ),
+                                Number(
+                                    33,
+                                ),
+                                Number(
+                                    102,
+                                ),
+                            ],
+                            right: [],
+                        },
+                    ),
+                ],
+            },
+        ),
+        Expression(
+            Expression {
                 operation: None,
                 left: [
                     Expression(
@@ -120,8 +273,8 @@ ast: BlockCode(
                             ),
                             left: [],
                             right: [
-                                IterationExpr(
-                                    IterationExpr {
+                                Expression(
+                                    Expression {
                                         operation: Some(
                                             Vector(
                                                 Unpack,
@@ -129,7 +282,118 @@ ast: BlockCode(
                                         ),
                                         left: [
                                             Name(
-                                                "vec",
+                                                "vec1",
+                                            ),
+                                            Name(
+                                                "vec2",
+                                            ),
+                                        ],
+                                        right: [],
+                                    },
+                                ),
+                            ],
+                        },
+                    ),
+                ],
+                right: [],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
+                    Expression(
+                        Expression {
+                            operation: Some(
+                                Computation(
+                                    Mul,
+                                ),
+                            ),
+                            left: [],
+                            right: [
+                                Expression(
+                                    Expression {
+                                        operation: Some(
+                                            Vector(
+                                                Unpack,
+                                            ),
+                                        ),
+                                        left: [
+                                            Name(
+                                                "vec1",
+                                            ),
+                                            Name(
+                                                "vec2",
+                                            ),
+                                        ],
+                                        right: [],
+                                    },
+                                ),
+                            ],
+                        },
+                    ),
+                ],
+                right: [],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
+                    Expression(
+                        Expression {
+                            operation: Some(
+                                Computation(
+                                    Mul,
+                                ),
+                            ),
+                            left: [
+                                Expression(
+                                    Expression {
+                                        operation: Some(
+                                            Vector(
+                                                Unpack,
+                                            ),
+                                        ),
+                                        left: [],
+                                        right: [
+                                            Name(
+                                                "vec2",
+                                            ),
+                                        ],
+                                    },
+                                ),
+                            ],
+                            right: [],
+                        },
+                    ),
+                ],
+                right: [],
+            },
+        ),
+        Expression(
+            Expression {
+                operation: None,
+                left: [
+                    Expression(
+                        Expression {
+                            operation: Some(
+                                Computation(
+                                    Mul,
+                                ),
+                            ),
+                            left: [],
+                            right: [
+                                Expression(
+                                    Expression {
+                                        operation: Some(
+                                            Vector(
+                                                Unpack,
+                                            ),
+                                        ),
+                                        left: [
+                                            Name(
+                                                "vec1",
                                             ),
                                         ],
                                         right: [],
@@ -144,239 +408,183 @@ ast: BlockCode(
         ),
     ],
 )
-right len: 1; left len: 1; command: Store(0)
-right len: 0; left len: 1; command: Add
-ir: [New, Put(Int(1)), Push, Put(Int(2)), Push, Put(Int(3)), Push, Put(Int(7)), Push, Put(Int(8)), Push, Put(Int(32)), Push, Put(Int(101)), Push, Store(0), Cls, Put(Int(0)), Load(0), Store(2), Put(Int(0)), Store(1), Put(Int(0)), Load(2), Load(1), Get, Add, Load(1), Put(Int(1)), Add, Dup, Store(1), Load(2), Len, Ls, Jmp(23), Add, Cls]
-stack: []
-op: New
-stack: [Vector(RefCell { value: [] })]
-op: Put(Int(1))
-stack: [Vector(RefCell { value: [] }), Int(1)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1)] })]
-op: Put(Int(2))
-stack: [Vector(RefCell { value: [Int(1)] }), Int(2)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2)] })]
-op: Put(Int(3))
-stack: [Vector(RefCell { value: [Int(1), Int(2)] }), Int(3)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3)] })]
-op: Put(Int(7))
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3)] }), Int(7)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7)] })]
-op: Put(Int(8))
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7)] }), Int(8)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8)] })]
-op: Put(Int(32))
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8)] }), Int(32)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32)] })]
-op: Put(Int(101))
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32)] }), Int(101)]
-op: Push
-stack: [Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Store(0)
-stack: []
-op: Cls
-stack: []
-op: Put(Int(0))
-stack: [Int(0)]
-op: Load(0)
-stack: [Int(0), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Store(2)
-stack: [Int(0)]
-op: Put(Int(0))
-stack: [Int(0), Int(0)]
-op: Store(1)
-stack: [Int(0)]
-op: Put(Int(0))
-stack: [Int(0), Int(0)]
-op: Load(2)
-stack: [Int(0), Int(0), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(0), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(0)]
-op: Get
-stack: [Int(0), Int(0), Int(1)]
-op: Add
-stack: [Int(0), Int(1)]
-op: Load(1)
-stack: [Int(0), Int(1), Int(0)]
-op: Put(Int(1))
-stack: [Int(0), Int(1), Int(0), Int(1)]
-op: Add
-stack: [Int(0), Int(1), Int(1)]
-op: Dup
-stack: [Int(0), Int(1), Int(1), Int(1)]
-op: Store(1)
-stack: [Int(0), Int(1), Int(1)]
-op: Load(2)
-stack: [Int(0), Int(1), Int(1), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(1), Int(1), Int(7)]
-op: Ls
-stack: [Int(0), Int(1), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(1)]
-op: Load(2)
-stack: [Int(0), Int(1), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(1), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(1)]
-op: Get
-stack: [Int(0), Int(1), Int(2)]
-op: Add
-stack: [Int(0), Int(3)]
-op: Load(1)
-stack: [Int(0), Int(3), Int(1)]
-op: Put(Int(1))
-stack: [Int(0), Int(3), Int(1), Int(1)]
-op: Add
-stack: [Int(0), Int(3), Int(2)]
-op: Dup
-stack: [Int(0), Int(3), Int(2), Int(2)]
-op: Store(1)
-stack: [Int(0), Int(3), Int(2)]
-op: Load(2)
-stack: [Int(0), Int(3), Int(2), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(3), Int(2), Int(7)]
-op: Ls
-stack: [Int(0), Int(3), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(3)]
-op: Load(2)
-stack: [Int(0), Int(3), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(3), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(2)]
-op: Get
-stack: [Int(0), Int(3), Int(3)]
-op: Add
-stack: [Int(0), Int(6)]
-op: Load(1)
-stack: [Int(0), Int(6), Int(2)]
-op: Put(Int(1))
-stack: [Int(0), Int(6), Int(2), Int(1)]
-op: Add
-stack: [Int(0), Int(6), Int(3)]
-op: Dup
-stack: [Int(0), Int(6), Int(3), Int(3)]
-op: Store(1)
-stack: [Int(0), Int(6), Int(3)]
-op: Load(2)
-stack: [Int(0), Int(6), Int(3), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(6), Int(3), Int(7)]
-op: Ls
-stack: [Int(0), Int(6), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(6)]
-op: Load(2)
-stack: [Int(0), Int(6), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(6), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(3)]
-op: Get
-stack: [Int(0), Int(6), Int(7)]
-op: Add
-stack: [Int(0), Int(13)]
-op: Load(1)
-stack: [Int(0), Int(13), Int(3)]
-op: Put(Int(1))
-stack: [Int(0), Int(13), Int(3), Int(1)]
-op: Add
-stack: [Int(0), Int(13), Int(4)]
-op: Dup
-stack: [Int(0), Int(13), Int(4), Int(4)]
-op: Store(1)
-stack: [Int(0), Int(13), Int(4)]
-op: Load(2)
-stack: [Int(0), Int(13), Int(4), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(13), Int(4), Int(7)]
-op: Ls
-stack: [Int(0), Int(13), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(13)]
-op: Load(2)
-stack: [Int(0), Int(13), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(13), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(4)]
-op: Get
-stack: [Int(0), Int(13), Int(8)]
-op: Add
-stack: [Int(0), Int(21)]
-op: Load(1)
-stack: [Int(0), Int(21), Int(4)]
-op: Put(Int(1))
-stack: [Int(0), Int(21), Int(4), Int(1)]
-op: Add
-stack: [Int(0), Int(21), Int(5)]
-op: Dup
-stack: [Int(0), Int(21), Int(5), Int(5)]
-op: Store(1)
-stack: [Int(0), Int(21), Int(5)]
-op: Load(2)
-stack: [Int(0), Int(21), Int(5), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(21), Int(5), Int(7)]
-op: Ls
-stack: [Int(0), Int(21), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(21)]
-op: Load(2)
-stack: [Int(0), Int(21), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(21), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(5)]
-op: Get
-stack: [Int(0), Int(21), Int(32)]
-op: Add
-stack: [Int(0), Int(53)]
-op: Load(1)
-stack: [Int(0), Int(53), Int(5)]
-op: Put(Int(1))
-stack: [Int(0), Int(53), Int(5), Int(1)]
-op: Add
-stack: [Int(0), Int(53), Int(6)]
-op: Dup
-stack: [Int(0), Int(53), Int(6), Int(6)]
-op: Store(1)
-stack: [Int(0), Int(53), Int(6)]
-op: Load(2)
-stack: [Int(0), Int(53), Int(6), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(53), Int(6), Int(7)]
-op: Ls
-stack: [Int(0), Int(53), Bool(true)]
-op: Jmp(23)
-stack: [Int(0), Int(53)]
-op: Load(2)
-stack: [Int(0), Int(53), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Load(1)
-stack: [Int(0), Int(53), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] }), Int(6)]
-op: Get
-stack: [Int(0), Int(53), Int(101)]
-op: Add
-stack: [Int(0), Int(154)]
-op: Load(1)
-stack: [Int(0), Int(154), Int(6)]
-op: Put(Int(1))
-stack: [Int(0), Int(154), Int(6), Int(1)]
-op: Add
-stack: [Int(0), Int(154), Int(7)]
-op: Dup
-stack: [Int(0), Int(154), Int(7), Int(7)]
-op: Store(1)
-stack: [Int(0), Int(154), Int(7)]
-op: Load(2)
-stack: [Int(0), Int(154), Int(7), Vector(RefCell { value: [Int(1), Int(2), Int(3), Int(7), Int(8), Int(32), Int(101)] })]
-op: Len
-stack: [Int(0), Int(154), Int(7), Int(7)]
-op: Ls
-stack: [Int(0), Int(154), Bool(false)]
-op: Jmp(23)
-stack: [Int(0), Int(154)]
-op: Add
-stack: [Int(154)]
-op: Cls
-Int(154)
+right len: 1; left len: 1; command: Err("Unsupported operation in ir generation!")
+right len: 7; left len: 0; command: Err("Unsupported operation in ir generation!")
+right len: 1; left len: 1; command: Err("Unsupported operation in ir generation!")
+right len: 7; left len: 0; command: Err("Unsupported operation in ir generation!")
+right len: 0; left len: 1; command: Ok(Add)
+right len: 2; left len: 0; command: Err("Unsupported operation in ir generation!")
+right len: 0; left len: 1; command: Ok(Mul)
+right len: 2; left len: 0; command: Err("Unsupported operation in ir generation!")
+right len: 1; left len: 0; command: Ok(Mul)
+right len: 0; left len: 1; command: Err("Unsupported operation in ir generation!")
+right len: 0; left len: 1; command: Ok(Mul)
+right len: 1; left len: 0; command: Err("Unsupported operation in ir generation!")
+0: New
+1: Put(Int(1))
+2: Push
+3: Put(Int(2))
+4: Push
+5: Put(Int(3))
+6: Push
+7: Put(Int(7))
+8: Push
+9: Put(Int(8))
+10: Push
+11: Put(Int(32))
+12: Push
+13: Put(Int(101))
+14: Push
+15: Store(0)
+16: Cls
+17: New
+18: Put(Int(4))
+19: Push
+20: Put(Int(5))
+21: Push
+22: Put(Int(6))
+23: Push
+24: Put(Int(9))
+25: Push
+26: Put(Int(10))
+27: Push
+28: Put(Int(33))
+29: Push
+30: Put(Int(102))
+31: Push
+32: Store(1)
+33: Cls
+34: Put(Int(0))
+35: Put(Int(0))
+36: Load(0)
+37: Store(3)
+38: Put(Int(0))
+39: Store(2)
+40: Put(Int(0))
+41: Load(3)
+42: Load(2)
+43: Get
+44: Add
+45: Load(2)
+46: Put(Int(1))
+47: Add
+48: Dup
+49: Store(2)
+50: Load(3)
+51: Len
+52: Ls
+53: Jmp(41)
+54: Add
+55: Load(1)
+56: Store(3)
+57: Put(Int(0))
+58: Store(2)
+59: Put(Int(0))
+60: Load(3)
+61: Load(2)
+62: Get
+63: Add
+64: Load(2)
+65: Put(Int(1))
+66: Add
+67: Dup
+68: Store(2)
+69: Load(3)
+70: Len
+71: Ls
+72: Jmp(60)
+73: Add
+74: Add
+75: Cls
+76: Put(Int(1))
+77: Put(Int(1))
+78: Load(0)
+79: Store(5)
+80: Put(Int(0))
+81: Store(4)
+82: Put(Int(1))
+83: Load(5)
+84: Load(4)
+85: Get
+86: Mul
+87: Load(4)
+88: Put(Int(1))
+89: Add
+90: Dup
+91: Store(4)
+92: Load(5)
+93: Len
+94: Ls
+95: Jmp(83)
+96: Mul
+97: Load(1)
+98: Store(5)
+99: Put(Int(0))
+100: Store(4)
+101: Put(Int(1))
+102: Load(5)
+103: Load(4)
+104: Get
+105: Mul
+106: Load(4)
+107: Put(Int(1))
+108: Add
+109: Dup
+110: Store(4)
+111: Load(5)
+112: Len
+113: Ls
+114: Jmp(102)
+115: Mul
+116: Mul
+117: Cls
+118: Put(Int(1))
+119: Put(Int(1))
+120: Load(1)
+121: Store(7)
+122: Put(Int(0))
+123: Store(6)
+124: Put(Int(1))
+125: Load(7)
+126: Load(6)
+127: Get
+128: Mul
+129: Load(6)
+130: Put(Int(1))
+131: Add
+132: Dup
+133: Store(6)
+134: Load(7)
+135: Len
+136: Ls
+137: Jmp(125)
+138: Mul
+139: Mul
+140: Cls
+141: Put(Int(1))
+142: Put(Int(1))
+143: Load(0)
+144: Store(9)
+145: Put(Int(0))
+146: Store(8)
+147: Put(Int(1))
+148: Load(9)
+149: Load(8)
+150: Get
+151: Mul
+152: Load(8)
+153: Put(Int(1))
+154: Add
+155: Dup
+156: Store(8)
+157: Load(9)
+158: Len
+159: Ls
+160: Jmp(148)
+161: Mul
+162: Mul
+163: Cls
+Int(323)
+Int(39477395865600)
+Int(36352800)
+Int(1085952)

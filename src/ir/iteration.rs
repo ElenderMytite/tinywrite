@@ -1,10 +1,10 @@
 use super::expression::ir_expression;
 use super::value::ir_value;
 use super::*;
-use crate::parser::{IterationExpr, Operation, Value, VectorOp};
+use crate::parser::{Expression, Operation, Value, VectorOp};
 use std::collections::HashMap;
 pub(super) fn ir_iteration(
-    iteration: &IterationExpr,
+    iteration: &Expression,
     variables: &mut HashMap<String, usize>,
     index: usize,
     outer: Option<Operation>,
@@ -15,25 +15,34 @@ pub(super) fn ir_iteration(
             VectorOp::Unpack => {
                 // assume vector is on top of the stack
                 // create variables for the index and the vector pointer
-                let mut k: usize = 0;
+                let mut k_idx: usize = 0;
                 let idx: usize;
                 loop {
-                    if variables.contains_key(&format!("--idx-{}", k)) {
-                        k += 1;
+                    if variables.contains_key(&format!("--idx-{}", k_idx)) {
+                        k_idx += 1;
                     } else {
-                        idx = register_variable(variables, format!("--idx-{}", k));
+                        idx = register_variable(variables, format!("--idx-{}", k_idx));
                         break;
                     }
                 }
-                k = 0;
+                let mut v_idx = 0;
                 let vec_ptr: usize;
                 loop {
-                    if variables.contains_key(&format!("--vec-{}", k)) {
-                        k += 1;
+                    if variables.contains_key(&format!("--vec-{}", k_idx)) {
+                        v_idx += 1;
                     } else {
-                        vec_ptr = register_variable(variables, format!("--vec-{}", k));
+                        vec_ptr = register_variable(variables, format!("--vec-{}", k_idx));
                         break;
                     }
+                }
+                match outer {
+                    Some(Operation::Computation(Computation::Add)) => {
+                        commands.push(Command::Put(StackValue::Int(0)));
+                    }
+                    Some(Operation::Computation(Computation::Mul)) => {
+                        commands.push(Command::Put(StackValue::Int(1)));
+                    }
+                    _ => (),
                 }
                 for value in iteration.left.iter().chain(iteration.right.iter()) {
                     let vector: usize = match value {
@@ -44,6 +53,7 @@ pub(super) fn ir_iteration(
                     commands.push(Command::Store(vec_ptr));
                     commands.push(Command::Put(StackValue::Int(0)));
                     commands.push(Command::Store(idx));
+                    let label = index + commands.len();
                     // put neultral element to the stack before the first iteration (0 for addition, 1 for multiplication)
                     match outer {
                         Some(Operation::Computation(Computation::Add)) => {
@@ -54,7 +64,6 @@ pub(super) fn ir_iteration(
                         }
                         _ => (),
                     }
-                    let label = index + commands.len();
                     // for loop
                     match outer {
                         Some(Operation::Comparison(_)) => {
@@ -84,7 +93,8 @@ pub(super) fn ir_iteration(
                             commands.push(Command::Load(vec_ptr));
                             commands.push(Command::Load(idx));
                             commands.push(Command::Get);
-                            commands.push(operation_to_command(Operation::Logic(logic_op)));
+                            commands
+                                .push(operation_to_command(Operation::Logic(logic_op)).unwrap());
                         }
                         _ => panic!("Unsupported outer operation for vector unpacking!"),
                     };
@@ -98,7 +108,18 @@ pub(super) fn ir_iteration(
                     commands.push(Command::Len);
                     commands.push(Command::Ls);
                     commands.push(Command::Jmp(label));
+                    match outer {
+                        Some(Operation::Computation(Computation::Div | Computation::Mul)) => {
+                            commands.push(Command::Mul)
+                        }
+                        Some(Operation::Computation(Computation::Sub | Computation::Add)) => {
+                            commands.push(Command::Add)
+                        }
+                        _ => (),
+                    }
                 }
+                free_variable(variables, format!("--vec-{v_idx}"));
+                free_variable(variables, format!("--idx-{idx}"));
             }
             VectorOp::Pack => {
                 commands.push(Command::New);
@@ -109,6 +130,7 @@ pub(super) fn ir_iteration(
                                 expr,
                                 variables,
                                 index + commands.len(),
+                                None,
                             ));
                         }
                         Value::Number(_) | Value::Name(_) => {
@@ -119,7 +141,6 @@ pub(super) fn ir_iteration(
                                 None,
                             ));
                         }
-                        _ => panic!("Non-expression node found inside iteration!"),
                     }
                     commands.push(Command::Push);
                 }

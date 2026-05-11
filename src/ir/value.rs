@@ -1,5 +1,4 @@
 use super::expression::ir_expression;
-use super::iteration::ir_iteration;
 use super::*;
 use crate::ir::Command;
 use crate::parser::Value;
@@ -19,11 +18,8 @@ pub(super) fn ir_value(
         }
         Value::Number(x) => commands.push(Command::Put(StackValue::Int(*x))),
         Value::Expression(expr) => {
-            commands.append(&mut ir_expression(expr, variables, index + commands.len()));
-        }
-        Value::IterationExpr(iter_expr) => {
-            commands.append(&mut ir_iteration(
-                iter_expr,
+            commands.append(&mut ir_expression(
+                expr,
                 variables,
                 index + commands.len(),
                 outer,

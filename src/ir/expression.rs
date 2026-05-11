@@ -1,3 +1,4 @@
+use super::iteration::ir_iteration;
 use super::value::ir_value;
 use super::*;
 use crate::parser::{Computation, Expression, Operation, Value};
@@ -6,6 +7,7 @@ pub(super) fn ir_expression(
     expression: &Expression,
     variables: &mut HashMap<String, usize>,
     index: usize,
+    outer: Option<Operation>,
 ) -> Vec<Command> {
     let mut commands = Vec::new();
     match expression.operation {
@@ -18,6 +20,9 @@ pub(super) fn ir_expression(
                 command
             );
             match op {
+                Operation::Vector(_) => {
+                    commands.append(&mut ir_iteration(expression, variables, index + 1, outer));
+                }
                 Operation::Set => {
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
@@ -49,7 +54,7 @@ pub(super) fn ir_expression(
                             index + commands.len(),
                             None,
                         ));
-                        commands.push(command.clone());
+                        commands.push(command.clone().unwrap());
                     }
                 }
                 Operation::Computation(computation) => match computation {
@@ -63,7 +68,7 @@ pub(super) fn ir_expression(
                                 Some(op),
                             ));
                         }
-                        commands.push(command.clone());
+                        commands.push(command.unwrap());
                     }
                     Computation::Sub => {
                         for (idx, value) in expression.left.iter().enumerate() {
@@ -88,7 +93,7 @@ pub(super) fn ir_expression(
                                 commands.push(Command::Add);
                             }
                         }
-                        commands.push(command.clone());
+                        commands.push(command.unwrap());
                     }
                     Computation::Mul => {
                         commands.push(Command::Put(StackValue::Int(1)));
@@ -100,7 +105,7 @@ pub(super) fn ir_expression(
                                 Some(op),
                             ));
                         }
-                        commands.push(command.clone());
+                        commands.push(command.unwrap());
                     }
                     Computation::Div => {
                         for (idx, value) in expression.left.iter().enumerate() {
@@ -126,7 +131,7 @@ pub(super) fn ir_expression(
                                 commands.push(Command::Mul);
                             }
                         }
-                        commands.push(command.clone());
+                        commands.push(command.unwrap());
                     }
                     Computation::Mod => {
                         if expression.left.len() + expression.right.len() == 2 {
@@ -139,7 +144,7 @@ pub(super) fn ir_expression(
                                 ));
                             }
                         }
-                        commands.push(command.clone());
+                        commands.push(command.unwrap());
                     }
                 },
                 Operation::Logic(_) => {
@@ -156,12 +161,9 @@ pub(super) fn ir_expression(
                             Some(op),
                         ));
                         if idx != 0 {
-                            commands.push(command.clone());
+                            commands.push(command.clone().unwrap());
                         }
                     }
-                }
-                Operation::Vector(_) => {
-                    panic!("Vector operation found inside expression!");
                 }
             }
         }

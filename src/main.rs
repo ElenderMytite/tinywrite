@@ -17,7 +17,9 @@ fn main() {
         println!("ast: {:#?}", ast);
         let vars = &mut HashMap::new();
         let ir: Vec<ir::Command> = ir::ir(ast, vars, 0);
-        println!("ir: {:?}", ir);
+        for (i, command) in ir.iter().enumerate() {
+            println!("{}: {:?}", i, command);
+        }
         vm::execute(&ir, Some(vars.len()));
     }
 }

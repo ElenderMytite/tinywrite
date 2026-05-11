@@ -2,12 +2,10 @@
 pub enum ParsingMode {
     Expression,
     Code,
-    Vector,
 }
 #[derive(Debug, Clone)]
 pub enum AstNode {
     Expression(Expression),
-    Iteration(IterationExpr),
     BlockCode(Vec<AstNode>),
 }
 #[derive(Debug, Clone)]
@@ -17,17 +15,10 @@ pub struct Expression {
     pub right: Vec<Value>,
 }
 #[derive(Debug, Clone)]
-pub struct IterationExpr {
-    pub operation: Option<Operation>,
-    pub left: Vec<Value>,
-    pub right: Vec<Value>,
-}
-#[derive(Debug, Clone)]
 pub enum Value {
     Name(String),
     Number(isize),
     Expression(Expression),
-    IterationExpr(IterationExpr),
 }
 impl Value {
     pub fn get_name(&self) -> Result<String, ()> {
@@ -44,11 +35,6 @@ pub enum Operation {
     Logic(Logic),
     Vector(VectorOp),
     Set,
-}
-impl Operation {
-    fn is_vector(&self) -> bool {
-        matches!(self, Operation::Vector(_))
-    }
 }
 #[derive(Debug, Clone)]
 enum Part {
@@ -107,12 +93,6 @@ pub fn astify(
                 *index += 1;
                 nodes.push(astify(tokens, ParsingMode::Code, index).unwrap())
             }
-            "[" => {
-                *index += 1;
-                buffer.push(Part::Node(
-                    astify(tokens, ParsingMode::Vector, index).unwrap(),
-                ));
-            }
             ")" => {
                 if block_type == ParsingMode::Expression {
                     let node = parse_expression(&buffer);
@@ -126,19 +106,7 @@ pub fn astify(
                     return Ok(AstNode::BlockCode(nodes));
                 }
             }
-            "]" => {
-                if block_type == ParsingMode::Vector {
-                    let iter = parse_iteration(&buffer);
-                    buffer.clear();
-                    return Ok(AstNode::Iteration(iter));
-                }
-            }
             ";" => match block_type {
-                ParsingMode::Vector => {
-                    let expr = Part::Node(AstNode::Expression(parse_expression(&buffer)));
-                    buffer.clear();
-                    buffer.push(expr);
-                }
                 ParsingMode::Expression => {
                     let expr = Part::Node(AstNode::Expression(parse_expression(&buffer)));
                     buffer.clear();
@@ -201,7 +169,6 @@ pub fn astify(
         }
     }
     match block_type {
-        ParsingMode::Vector => panic!("unexpected end of vector"),
         ParsingMode::Expression => panic!("unexpected end of expression"),
         ParsingMode::Code => Ok(AstNode::BlockCode(nodes)),
     }
@@ -216,7 +183,6 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
         match buffer[idx] {
             Part::Operation(op) => {
                 if operation.is_none() {
-                    assert!(!op.is_vector());
                     operation = Some(op);
                 } else {
                     panic!("Second operation inside one paren found while parsing ")
@@ -238,37 +204,6 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
         right: parse_unaries(&right),
     }
 }
-fn parse_iteration(buffer: &Vec<Part>) -> IterationExpr {
-    let mut idx = 0;
-    let mut left: Vec<Part> = Vec::new();
-    let mut right: Vec<Part> = Vec::new();
-    let mut operation: Option<Operation> = None;
-    while idx < buffer.len() {
-        match buffer[idx] {
-            Part::Operation(op) => {
-                if operation.is_none() {
-                    assert!(op.is_vector());
-                    operation = Some(op);
-                } else {
-                    panic!("Second operation inside one paren found while parsing ")
-                }
-            }
-            Part::Name(_) | Part::Number(_) | Part::Node(_) => {
-                if operation.is_none() {
-                    left.push(buffer[idx].clone());
-                } else {
-                    right.push(buffer[idx].clone());
-                }
-            }
-        }
-        idx += 1;
-    }
-    IterationExpr {
-        operation,
-        left: parse_unaries(&left),
-        right: parse_unaries(&right),
-    }
-}
 fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
     buffer
         .iter()
@@ -277,7 +212,6 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
             Part::Number(x) => Value::Number(x),
             Part::Node(n) => match n {
                 AstNode::Expression(expr) => Value::Expression(expr),
-                AstNode::Iteration(iter_expr) => Value::IterationExpr(iter_expr),
                 _ => panic!("Block found while parsing unary expression"),
             },
             _ => panic!("can't parse unary expression"),
