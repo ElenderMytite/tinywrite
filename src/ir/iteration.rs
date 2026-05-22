@@ -1,7 +1,7 @@
 use super::expression::ir_expression;
 use super::value::ir_value;
 use super::*;
-use crate::parser::{Expression, Operation, Value, VectorOp};
+use crate::parser::types::{Expression, Operation, Value, VectorOp};
 use std::collections::HashMap;
 pub(super) fn ir_iteration(
     iteration: &Expression,
@@ -139,7 +139,7 @@ pub(super) fn ir_iteration(
                                 None,
                             ));
                         }
-                        Value::Number(_) | Value::Name(_) => {
+                        Value::Number(_) | Value::Name(_) | Value::Bool(_) => {
                             commands.append(&mut ir_value(
                                 node,
                                 variables,

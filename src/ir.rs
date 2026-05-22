@@ -2,7 +2,7 @@ use std::collections::HashMap;
 mod expression;
 mod iteration;
 mod value;
-use crate::parser::{AstNode, Comparison, Computation, Logic, Operation};
+use crate::parser::types::{AstNode, Comparison, Computation, Logic, Operation};
 use crate::vm::StackValue;
 #[derive(Debug, Clone)]
 pub enum Command {

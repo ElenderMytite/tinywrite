@@ -1,81 +1,8 @@
-#[derive(PartialEq, Eq)]
-pub enum ParsingMode {
-    Expression,
-    Code,
-}
-#[derive(Debug, Clone)]
-pub enum AstNode {
-    Expression(Expression),
-    BlockCode(Vec<AstNode>),
-}
-#[derive(Debug, Clone)]
-pub struct Expression {
-    pub operation: Option<Operation>,
-    pub left: Vec<Value>,
-    pub right: Vec<Value>,
-}
-#[derive(Debug, Clone)]
-pub enum Value {
-    Name(String),
-    Number(isize),
-    Expression(Expression),
-}
-impl Value {
-    pub fn get_name(&self) -> Result<String, ()> {
-        match &self {
-            Self::Name(s) => Ok(s.clone()),
-            _ => Err(()),
-        }
-    }
-}
-#[derive(Debug, Clone)]
-pub enum Operation {
-    Comparison(Comparison),
-    Computation(Computation),
-    Logic(Logic),
-    Vector(VectorOp),
-    Call(String),
-    Set,
-}
-#[derive(Debug, Clone)]
-enum Part {
-    Operation(Operation),
-    Node(AstNode),
-    Call,
-    Name(String),
-    Number(isize),
-}
-#[derive(Debug, Clone, Copy)]
-pub enum VectorOp {
-    Pack,
-    Unpack,
-}
-#[derive(Debug, Clone, Copy)]
-pub enum Comparison {
-    Greater,
-    Less,
-    Equal,
-    GreaterOrEqual,
-    LessOrEqual,
-    NotEqual,
-}
-#[derive(Debug, Clone, Copy)]
-pub enum Computation {
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Mod,
-}
-#[derive(Debug, Clone, Copy)]
-pub enum Logic {
-    And,
-    Or,
-    Xor,
-    Nand,
-    Nor,
-    Not,
-}
+pub mod types;
+use types::{
+    AstNode, Comparison, Computation, Expression, Keyword, Logic, Operation, ParsingMode, Part,
+    Value, VectorOp,
+};
 pub fn astify(
     tokens: &Vec<String>,
     block_type: ParsingMode,
@@ -87,8 +14,11 @@ pub fn astify(
         match tokens[*index].as_str() {
             "(" => {
                 *index += 1;
-                buffer.push(Part::Node(
-                    astify(tokens, ParsingMode::Expression, index).unwrap(),
+                buffer.push(Part::Expression(
+                    astify(tokens, ParsingMode::Expression, index)
+                        .unwrap()
+                        .expr()
+                        .unwrap(),
                 ));
             }
             "{" => {
@@ -110,7 +40,7 @@ pub fn astify(
             }
             ";" => match block_type {
                 ParsingMode::Expression => {
-                    let expr = Part::Node(AstNode::Expression(parse_expression(&buffer)));
+                    let expr = Part::Expression(parse_expression(&buffer));
                     buffer.clear();
                     buffer.push(expr);
                 }
@@ -156,8 +86,26 @@ pub fn astify(
             x if x.chars().all(|c| c.is_alphanumeric() || c == '_') => {
                 buffer.push(Part::Name(x.to_string()));
             }
-
-            x => panic!("unexpected token: \"{x}\""),
+            "$" => {
+                *index += 1;
+                // if !buffer.is_empty() {
+                //     buffer.push(Part::Expression(parse_expression(&buffer)));
+                // }
+                if let Some(keyword) = tokens.get(*index) {
+                    match keyword.to_lowercase().as_str() {
+                        "if" => buffer.push(Part::Keyword(Keyword::If)),
+                        "else" => buffer.push(Part::Keyword(Keyword::Else)),
+                        "end" => buffer.push(Part::Keyword(Keyword::End)),
+                        "redo" => buffer.push(Part::Keyword(Keyword::Redo)),
+                        "true" => buffer.push(Part::Keyword(Keyword::True)),
+                        "false" => buffer.push(Part::Keyword(Keyword::False)),
+                        _ => return Err(format!("unexpected keywrord: {keyword}")),
+                    }
+                } else {
+                    return Err("expected keyword after $ sign, found end of file".to_string());
+                }
+            }
+            x => return Err(format!("unexpected token: \"{x}\"")),
         }
         // println!("buffer: {:?}", buffer);
         // println!("index: {}", *index);
@@ -166,8 +114,12 @@ pub fn astify(
     if !buffer.is_empty() {
         for part in buffer {
             match part {
-                Part::Node(n) => nodes.push(n),
-                _ => panic!("unexpected part in buffer at end of tokens: {:?}", part),
+                Part::Expression(n) => nodes.push(AstNode::Expression(n)),
+                _ => {
+                    return Err(format!(
+                        "unexpected part in buffer at end of tokens: {part:?}"
+                    ));
+                }
             }
         }
     }
@@ -191,7 +143,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                     panic!("Second operation inside one paren found while parsing ")
                 }
             }
-            Part::Name(_) | Part::Number(_) | Part::Node(_) => {
+            Part::Name(_) | Part::Number(_) | Part::Expression(_) => {
                 if operation.is_none() {
                     left.push(buffer[idx].clone());
                 } else {
@@ -210,6 +162,18 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                     panic!("Unexpected end of tokens after call operator!");
                 }
             }
+            Part::Keyword(word) => match word {
+                Keyword::If | Keyword::Else | Keyword::End | Keyword::Redo => {
+                    panic!("Unexpected control flow keyword inside expression!");
+                }
+                Keyword::True | Keyword::False => {
+                    if operation.is_none() {
+                        left.push(buffer[idx].clone());
+                    } else {
+                        right.push(buffer[idx].clone());
+                    }
+                }
+            },
         }
         idx += 1;
     }
@@ -225,9 +189,11 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
         .map(|part| match part.clone() {
             Part::Name(s) => Value::Name(s),
             Part::Number(x) => Value::Number(x),
-            Part::Node(n) => match n {
-                AstNode::Expression(expr) => Value::Expression(expr),
-                _ => panic!("Block found while parsing unary expression"),
+            Part::Expression(expr) => Value::Expression(expr),
+            Part::Keyword(b) => match b {
+                Keyword::True => Value::Bool(true),
+                Keyword::False => Value::Bool(false),
+                _ => panic!("can't convert keyword to value"),
             },
             _ => panic!("can't parse unary expression"),
         })

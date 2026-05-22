@@ -1,7 +1,7 @@
-[1, 2, 3, 6, 0, -6]
-1
-6
-0
-6
--6
-5
+false
+true
+true
+true
+false
+true
+false

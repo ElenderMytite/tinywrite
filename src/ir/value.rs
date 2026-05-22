@@ -1,7 +1,7 @@
 use super::expression::ir_expression;
 use super::*;
 use crate::ir::Command;
-use crate::parser::Value;
+use crate::parser::types::Value;
 use crate::vm::StackValue;
 use std::collections::HashMap;
 pub(super) fn ir_value(
@@ -16,6 +16,7 @@ pub(super) fn ir_value(
             register_variable(variables, s.clone());
             commands.push(Command::Load(variables[s]));
         }
+        Value::Bool(b) => commands.push(Command::Put(StackValue::Bool(*b))),
         Value::Number(x) => commands.push(Command::Put(StackValue::Int(*x))),
         Value::Expression(expr) => {
             commands.append(&mut ir_expression(

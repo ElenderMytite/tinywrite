@@ -7,11 +7,11 @@ fn main() {
     let args = args().skip(1).collect::<Vec<String>>();
     for file in args {
         // println!("executing file: {}", file.trim());
-        let text = read_to_string(file.trim()).unwrap();
+        let text = read_to_string(format!("examples/{}", file.trim())).unwrap();
         // println!("text: {}", text);
         let tokens = lexer::tokenize(text.as_str());
         // println!("tokens: {:?}", tokens);
-        let ast = parser::astify(&tokens, parser::ParsingMode::Code, &mut 0).unwrap();
+        let ast = parser::astify(&tokens, parser::types::ParsingMode::Code, &mut 0).unwrap();
         // println!("ast: {:#?}", ast);
         let vars = &mut HashMap::new();
         let ir: Vec<ir::Command> = ir::ir(ast, vars, 0);

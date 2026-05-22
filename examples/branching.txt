@@ -1,0 +1,13 @@
+$if (7 > 5) {
+    #Code to execute if the condition is true
+    7;
+}
+$else $if (7 < 5) {
+    #Code to execute if the condition is false and this condition is true
+    5;
+}
+$else {
+    57;
+    #Code to execute if all above conditions are false
+}
+# example program testing if "if" statements are working

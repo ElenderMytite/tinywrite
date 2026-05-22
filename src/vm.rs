@@ -139,12 +139,9 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                 stack.push(StackValue::Bool(a != b));
             }
             Command::Not => {
-                assert!(stack.len() >= 2);
-                let (b, a) = (
-                    stack.pop().unwrap().bool().unwrap(),
-                    stack.pop().unwrap().bool().unwrap(),
-                );
-                stack.push(StackValue::Bool(a != b));
+                assert!(stack.len() >= 1);
+                let a = stack.pop().unwrap().bool().unwrap();
+                stack.push(StackValue::Bool(!a));
             }
             Command::And => {
                 assert!(stack.len() >= 2);
@@ -152,7 +149,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     stack.pop().unwrap().bool().unwrap(),
                     stack.pop().unwrap().bool().unwrap(),
                 );
-                stack.push(StackValue::Bool(a != b));
+                stack.push(StackValue::Bool(a && b));
             }
             Command::Or => {
                 assert!(stack.len() >= 2);
@@ -160,7 +157,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     stack.pop().unwrap().bool().unwrap(),
                     stack.pop().unwrap().bool().unwrap(),
                 );
-                stack.push(StackValue::Bool(a != b));
+                stack.push(StackValue::Bool(a || b));
             }
             Command::Xor => {
                 assert!(stack.len() >= 2);
@@ -176,7 +173,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     stack.pop().unwrap().bool().unwrap(),
                     stack.pop().unwrap().bool().unwrap(),
                 );
-                stack.push(StackValue::Bool(a != b));
+                stack.push(StackValue::Bool(!(a || b)));
             }
             Command::Nand => {
                 assert!(stack.len() >= 2);
@@ -184,7 +181,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     stack.pop().unwrap().bool().unwrap(),
                     stack.pop().unwrap().bool().unwrap(),
                 );
-                stack.push(StackValue::Bool(a != b));
+                stack.push(StackValue::Bool(!(a && b)));
             }
             Command::Load(adress) => {
                 stack.push(env[adress].clone());

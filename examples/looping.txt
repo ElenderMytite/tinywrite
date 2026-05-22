@@ -1,0 +1,19 @@
+# program computing fibonacci sequence
+i = 0;
+n = 10;
+previous = 0;
+current = 1;
+# execute the block of code; start again if $redo is called; end if $end is called;
+# panic if execution reaches the end of the block
+$do {
+    $if (i < n) {
+        (i current);
+        next = (previous + current);
+        previous = current;
+        current = next;
+        i = i + 1;
+        $redo;
+    } $else {
+        $end;
+    }
+}

@@ -1,7 +1,7 @@
 use super::iteration::ir_iteration;
 use super::value::ir_value;
 use super::*;
-use crate::parser::{Computation, Expression, Operation, Value};
+use crate::parser::types::{Computation, Expression, Operation, Value};
 use std::collections::HashMap;
 pub(super) fn ir_expression(
     expression: &Expression,
@@ -103,6 +103,7 @@ pub(super) fn ir_expression(
                     }
                 }
                 Operation::Comparison(_) => {
+                    // println!("{expression:#?}");
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
                         commands.append(&mut ir_value(
@@ -205,7 +206,7 @@ pub(super) fn ir_expression(
                         commands.push(command.unwrap());
                     }
                 },
-                Operation::Logic(_) => {
+                Operation::Logic(l) => {
                     for (idx, value) in expression
                         .left
                         .iter()
@@ -218,7 +219,7 @@ pub(super) fn ir_expression(
                             index + commands.len(),
                             Some(op.clone()),
                         ));
-                        if idx != 0 {
+                        if idx != 0 || l == Logic::Not {
                             commands.push(command.clone().unwrap());
                         }
                     }
