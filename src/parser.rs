@@ -29,7 +29,6 @@ pub fn astify(
                 if block_type == ParsingMode::Expression {
                     let node = parse_expression(&buffer);
                     buffer.clear();
-                    // println!("parsed expression: {:?}", node);
                     return Ok(AstNode::Expression(node));
                 }
             }
@@ -87,9 +86,6 @@ pub fn astify(
             }
             "$" => {
                 *index += 1;
-                // if !buffer.is_empty() {
-                //     buffer.push(Part::Expression(parse_expression(&buffer)));
-                // }
                 if let Some(keyword) = tokens.get(*index) {
                     match keyword.to_lowercase().as_str() {
                         "if" => buffer.push(Part::Keyword(Keyword::If)),
@@ -106,8 +102,6 @@ pub fn astify(
             }
             x => return Err(format!("unexpected token: \"{x}\"")),
         }
-        // println!("buffer: {:?}", buffer);
-        // println!("index: {}", *index);
         *index += 1;
     }
     if !buffer.is_empty() {

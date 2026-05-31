@@ -22,6 +22,7 @@ passed_tests=0
 # List of tests to run
 tests=(
     "test_arithmetic"
+    "test_same_operation_support"
     "test_comparisons"
     "test_logic"
     "test_variables"

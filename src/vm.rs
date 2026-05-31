@@ -6,8 +6,9 @@ use std::rc::Rc;
 pub enum StackValue {
     Bool(bool),
     Int(isize),
+    Char(char),
     Vector(Rc<RefCell<Vec<StackValue>>>),
-    None,
+    Nil,
 }
 impl StackValue {
     fn int(&self) -> Result<isize, ()> {
@@ -25,12 +26,9 @@ impl StackValue {
 }
 pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
     let mut ip = 0;
-    let mut env: Vec<StackValue> = vec![StackValue::None; capacity.unwrap_or(0)];
+    let mut env: Vec<StackValue> = vec![StackValue::Nil; capacity.unwrap_or(0)];
     let mut stack: Vec<StackValue> = Vec::new();
     while ip < code.len() {
-        // println!("stack: {stack:?}");
-        // println!("ip: {}", ip);
-        // println!("op: {:?}", code[ip].clone());
         match code[ip].clone() {
             Command::Add => {
                 assert!(stack.len() >= 2);
@@ -189,7 +187,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
             Command::Store(adress) => {
                 assert!(stack.len() >= 1);
                 while adress >= env.len() {
-                    env.resize(adress + 1, StackValue::None);
+                    env.resize(adress + 1, StackValue::Nil);
                 }
                 env[adress] = stack.pop().unwrap();
             }
@@ -257,9 +255,10 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
 }
 fn print_value(value: &StackValue) -> String {
     match value {
-        StackValue::None => "None".to_string(),
+        StackValue::Nil => "Nil".to_string(),
         StackValue::Int(x) => x.to_string(),
         StackValue::Bool(b) => b.to_string(),
+        StackValue::Char(c) => c.to_string(),
         StackValue::Vector(vec) => format!(
             "[{}]",
             vec.borrow()
