@@ -128,7 +128,7 @@ pub(super) fn ir_iteration(
                 free_variable(variables, format!("--idx-{k_idx}"));
             }
             VectorOp::Pack => {
-                commands.push(Command::New);
+                commands.push(Command::VNew);
                 for node in iteration.left.iter().chain(iteration.right.iter()) {
                     match node {
                         Value::Expression(expr) => {

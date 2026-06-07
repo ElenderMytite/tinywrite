@@ -39,6 +39,26 @@ pub(super) fn ir_expression(
                 }
                 Operation::Call(func) => {
                     match func.as_str() {
+                        "byte" | "char" => {
+                            assert_eq!(expression.left.len() + expression.right.len(), 1);
+                            let value = if expression.left.len() == 1 {
+                                &expression.left[0]
+                            } else {
+                                &expression.right[0]
+                            };
+                            commands.append(&mut ir_value(
+                                value,
+                                variables,
+                                index + commands.len(),
+                                None,
+                            ));
+                            match func.as_str() {
+                                "byte" => commands.push(Command::Byte),
+                                "char" => commands.push(Command::Char),
+                                _ => unreachable!(),
+                            }
+                            return commands;
+                        }
                         "push" | "get" => {
                             assert_eq!(expression.left.len(), 1);
                             commands.push(Command::Load(register_variable(
@@ -84,7 +104,7 @@ pub(super) fn ir_expression(
                             None,
                         ));
                         match command {
-                            Ok(Command::Push | Command::Pop | Command::Get | Command::Len) => {
+                            Ok(Command::Push | Command::VPop | Command::Get | Command::Len) => {
                                 commands.push(command.clone().unwrap());
                             }
                             _ => panic!("Unsupported function call found!"),

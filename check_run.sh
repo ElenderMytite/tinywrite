@@ -21,16 +21,17 @@ passed_tests=0
 
 # List of tests to run
 tests=(
-    "test_arithmetic"
-    "test_same_operation_support"
-    "test_comparisons"
-    "test_logic"
-    "test_variables"
-    "test_expressions"
-    "test_vectors"
-    "test_edge_cases"
-    "test_advanced"
-    "test_integration"
+    "char_byte"
+    "arithmetic"
+    "same_operation_support"
+    "comparisons"
+    "logic"
+    "variables"
+    "expressions"
+    "vectors"
+    "edge_cases"
+    "advanced"
+    "integration"
 )
 
 # Run each test

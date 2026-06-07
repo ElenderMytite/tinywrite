@@ -36,23 +36,17 @@ pub enum Command {
     Load(usize),
     Store(usize),
     // control flow,
-    // Set the instruction pointer to specified value if on the top of the stack is true value,
     Jmp(usize),
     // vector operations,
-    // returns the length of the vector on the top of the stack
     Len,
-    // creates new vector and pushes it to the stack
-    New,
-    // pushes the top of the stack to the vector below it on the stack
+    VNew,
     Push,
-    // pops the vector on the top of the stack and puts the result to the stack
-    Pop,
-    // pops the index from the stack, copies the vector below it on the stack, pushes the value at the index to the stack
+    VPop,
     Get,
+    // type conversions
+    Byte, // convert ascii character to int
+    Char, // convert int to ascii character
 }
-/* example unpacking ir for :
- *
- */
 pub fn ir(
     root: AstNode,
     variables: &mut HashMap<String, usize>,
@@ -115,7 +109,7 @@ fn operation_to_command(op: Operation) -> Result<Command, String> {
         }),
         Operation::Call(func) => match func.as_str() {
             "push" => Ok(Command::Push),
-            "pop" => Ok(Command::Pop),
+            "pop" => Ok(Command::VPop),
             "get" => Ok(Command::Get),
             "len" => Ok(Command::Len),
             _ => Err("unknown function".to_string()),

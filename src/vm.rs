@@ -1,7 +1,7 @@
 use crate::ir::Command;
 use std::cell::RefCell;
+use std::cmp::max;
 use std::rc::Rc;
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StackValue {
     Bool(bool),
@@ -23,10 +23,15 @@ impl StackValue {
             _ => Err(()),
         }
     }
+    fn char(&self) -> Result<char, ()> {
+        match &self {
+            Self::Char(c) => Ok(*c),
+            _ => Err(()),
+        }
+    }
 }
-pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
+pub fn execute(code: &Vec<Command>, env: &mut Vec<StackValue>) {
     let mut ip = 0;
-    let mut env: Vec<StackValue> = vec![StackValue::Nil; capacity.unwrap_or(0)];
     let mut stack: Vec<StackValue> = Vec::new();
     while ip < code.len() {
         match code[ip].clone() {
@@ -69,6 +74,16 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     stack.pop().unwrap().int().unwrap(),
                 );
                 stack.push(StackValue::Int(a % b));
+            }
+            Command::Byte => {
+                assert!(stack.len() >= 1);
+                let c = stack.pop().unwrap().char().unwrap();
+                stack.push(StackValue::Int(c as isize));
+            }
+            Command::Char => {
+                assert!(stack.len() >= 1);
+                let i = stack.pop().unwrap().int().unwrap();
+                stack.push(StackValue::Char(char::from_u32(i as u32).unwrap()));
             }
             Command::Put(stack_value) => {
                 stack.push(stack_value);
@@ -182,13 +197,15 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                 stack.push(StackValue::Bool(!(a && b)));
             }
             Command::Load(adress) => {
-                stack.push(env[adress].clone());
+                if adress >= env.len() {
+                    stack.push(StackValue::Nil);
+                } else {
+                    stack.push(env[adress].clone());
+                }
             }
             Command::Store(adress) => {
                 assert!(stack.len() >= 1);
-                while adress >= env.len() {
-                    env.resize(adress + 1, StackValue::Nil);
-                }
+                env.resize(max(adress + 1, env.len()), StackValue::Nil);
                 env[adress] = stack.pop().unwrap();
             }
             Command::Jmp(adress) => {
@@ -208,7 +225,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     _ => panic!("expected vector on the stack"),
                 }
             }
-            Command::New => {
+            Command::VNew => {
                 stack.push(StackValue::Vector(Rc::new(RefCell::new(Vec::new()))));
             }
             Command::Push => {
@@ -222,7 +239,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
                     _ => panic!("expected vector on the stack"),
                 }
             }
-            Command::Pop => {
+            Command::VPop => {
                 assert!(stack.len() >= 1);
                 let vector = stack.pop().unwrap();
                 match vector {
@@ -253,7 +270,7 @@ pub fn execute(code: &Vec<Command>, capacity: Option<usize>) {
         ip += 1;
     }
 }
-fn print_value(value: &StackValue) -> String {
+pub(super) fn print_value(value: &StackValue) -> String {
     match value {
         StackValue::Nil => "Nil".to_string(),
         StackValue::Int(x) => x.to_string(),
