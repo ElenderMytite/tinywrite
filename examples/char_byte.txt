@@ -2,3 +2,5 @@
 98 :char;
 99 :char;
 :byte (100 :char);
+$line;
+$tab;

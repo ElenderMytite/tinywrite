@@ -27,6 +27,7 @@ pub(crate) enum Value {
     Name(String),
     Number(isize),
     Bool(bool),
+    Char(char),
     Expression(Expression),
 }
 impl Value {
@@ -63,6 +64,8 @@ pub(super) enum Keyword {
     End,
     True,
     False,
+    Tab,
+    Newline,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum VectorOp {

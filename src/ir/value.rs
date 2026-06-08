@@ -18,6 +18,7 @@ pub(super) fn ir_value(
         }
         Value::Bool(b) => commands.push(Command::Put(StackValue::Bool(*b))),
         Value::Number(x) => commands.push(Command::Put(StackValue::Int(*x))),
+        Value::Char(c) => commands.push(Command::Put(StackValue::Char(*c))),
         Value::Expression(expr) => {
             commands.append(&mut ir_expression(
                 expr,

@@ -94,6 +94,8 @@ pub fn astify(
                         "redo" => buffer.push(Part::Keyword(Keyword::Redo)),
                         "true" => buffer.push(Part::Keyword(Keyword::True)),
                         "false" => buffer.push(Part::Keyword(Keyword::False)),
+                        "tab" => buffer.push(Part::Keyword(Keyword::Tab)),
+                        "line" => buffer.push(Part::Keyword(Keyword::Newline)),
                         _ => return Err(format!("unexpected keywrord: {keyword}")),
                     }
                 } else {
@@ -159,7 +161,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                 Keyword::If | Keyword::Else | Keyword::End | Keyword::Redo => {
                     panic!("Unexpected control flow keyword inside expression!");
                 }
-                Keyword::True | Keyword::False => {
+                Keyword::True | Keyword::False | Keyword::Newline | Keyword::Tab => {
                     if operation.is_none() {
                         left.push(buffer[idx].clone());
                     } else {
@@ -188,6 +190,8 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
             Part::Keyword(b) => match b {
                 Keyword::True => Value::Bool(true),
                 Keyword::False => Value::Bool(false),
+                Keyword::Tab => Value::Char('\t'),
+                Keyword::Newline => Value::Char('\n'),
                 _ => panic!("can't convert keyword to value"),
             },
             _ => panic!("can't parse unary expression"),

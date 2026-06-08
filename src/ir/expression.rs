@@ -1,6 +1,7 @@
 use super::iteration::ir_iteration;
 use super::value::ir_value;
 use super::*;
+mod call;
 use crate::parser::types::{Computation, Expression, Operation, Value};
 use std::collections::HashMap;
 pub(super) fn ir_expression(
@@ -37,88 +38,9 @@ pub(super) fn ir_expression(
                 Operation::Vector(_) => {
                     commands.append(&mut ir_iteration(expression, variables, index + 1, outer));
                 }
-                Operation::Call(func) => {
-                    match func.as_str() {
-                        "byte" | "char" => {
-                            assert_eq!(expression.left.len() + expression.right.len(), 1);
-                            let value = if expression.left.len() == 1 {
-                                &expression.left[0]
-                            } else {
-                                &expression.right[0]
-                            };
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                None,
-                            ));
-                            match func.as_str() {
-                                "byte" => commands.push(Command::Byte),
-                                "char" => commands.push(Command::Char),
-                                _ => unreachable!(),
-                            }
-                            return commands;
-                        }
-                        "push" | "get" => {
-                            assert_eq!(expression.left.len(), 1);
-                            commands.push(Command::Load(register_variable(
-                                variables,
-                                expression.left[0].get_name().unwrap(),
-                            )));
-                        }
-                        "len" | "pop" => {
-                            assert_eq!(expression.left.len() + expression.right.len(), 1);
-                            if expression.left.len() == 1 {
-                                commands.push(Command::Load(register_variable(
-                                    variables,
-                                    expression.left[0].get_name().unwrap(),
-                                )));
-                            } else {
-                                commands.push(Command::Load(register_variable(
-                                    variables,
-                                    expression.right[0].get_name().unwrap(),
-                                )));
-                            }
-                            commands.push(command.clone().unwrap());
-                            return commands;
-                        }
-                        _ => {
-                            panic!("Unsupported function call found!");
-                        }
-                    }
-                    for value in expression
-                        .left
-                        .iter()
-                        .skip(1)
-                        .chain(expression.right.iter())
-                    {
-                        // special prepraration for commands that consume the pointer to the vector (get command),
-                        match command {
-                            Ok(Command::Get) => commands.push(Command::Dup),
-                            _ => (),
-                        }
-                        commands.append(&mut ir_value(
-                            value,
-                            variables,
-                            index + commands.len(),
-                            None,
-                        ));
-                        match command {
-                            Ok(Command::Push | Command::VPop | Command::Get | Command::Len) => {
-                                commands.push(command.clone().unwrap());
-                            }
-                            _ => panic!("Unsupported function call found!"),
-                        }
-                        // special post-preparation for commands that put values on top of the stack (get command),
-                        match command {
-                            Ok(Command::Get) => commands.push(Command::Swap),
-                            _ => (),
-                        }
-                    }
-                    match command {
-                        Ok(Command::Get) => commands.push(Command::Del),
-                        _ => (),
-                    }
+                Operation::Call(_) => {
+                    let new_idx = index + commands.len();
+                    call::ir_call(expression, variables, &mut commands, command, new_idx);
                 }
                 Operation::Set => {
                     assert_eq!(expression.left.len(), expression.right.len());

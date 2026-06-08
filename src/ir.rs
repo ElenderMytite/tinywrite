@@ -46,6 +46,8 @@ pub enum Command {
     // type conversions
     Byte, // convert ascii character to int
     Char, // convert int to ascii character
+    // I/O
+    Print,
 }
 pub fn ir(
     root: AstNode,
@@ -112,7 +114,8 @@ fn operation_to_command(op: Operation) -> Result<Command, String> {
             "pop" => Ok(Command::VPop),
             "get" => Ok(Command::Get),
             "len" => Ok(Command::Len),
-            _ => Err("unknown function".to_string()),
+            "print" => Ok(Command::Print),
+            _ => Err(format!("unknown function: {}", func)),
         },
         _ => Err("Unsupported operation in ir generation!".to_string()),
     }

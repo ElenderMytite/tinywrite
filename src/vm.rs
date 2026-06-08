@@ -1,6 +1,7 @@
 use crate::ir::Command;
 use std::cell::RefCell;
 use std::cmp::max;
+use std::io::{self, Write};
 use std::rc::Rc;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StackValue {
@@ -33,6 +34,7 @@ impl StackValue {
 pub fn execute(code: &Vec<Command>, env: &mut Vec<StackValue>) {
     let mut ip = 0;
     let mut stack: Vec<StackValue> = Vec::new();
+    let mut flush: bool = false;
     while ip < code.len() {
         match code[ip].clone() {
             Command::Add => {
@@ -104,10 +106,22 @@ pub fn execute(code: &Vec<Command>, env: &mut Vec<StackValue>) {
                 stack.push(a);
             }
             Command::Cls => {
-                for element in stack.iter() {
-                    println!("{}", print_value(element));
+                if flush {
+                    println!();
+                    flush = false;
                 }
-                stack.clear()
+                stack.clear();
+            }
+            Command::Print => {
+                assert!(stack.len() >= 1);
+                flush = true;
+                let value = stack.pop().unwrap();
+                if value == StackValue::Char('\n') {
+                    println!();
+                    flush = false;
+                } else {
+                    print!("{} ", print_value(&value));
+                }
             }
             Command::Gt => {
                 assert!(stack.len() >= 2);

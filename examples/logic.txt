@@ -1,6 +1,6 @@
 # Test logical operations
 # AND operation
-(& $true $true);
+:print (& $true $true);
 (& $true $false);
 
 # OR operation

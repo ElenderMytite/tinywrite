@@ -139,7 +139,7 @@ pub(super) fn ir_iteration(
                                 None,
                             ));
                         }
-                        Value::Number(_) | Value::Name(_) | Value::Bool(_) => {
+                        _ => {
                             commands.append(&mut ir_value(
                                 node,
                                 variables,
