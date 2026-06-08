@@ -1,7 +1,6 @@
 use crate::ir::Command;
 use std::cell::RefCell;
 use std::cmp::max;
-use std::io::{self, Write};
 use std::rc::Rc;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StackValue {
