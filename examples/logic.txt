@@ -1,6 +1,7 @@
 # Test logical operations
 # AND operation
 :print (& $true $true);
+:print (:char 68);
 (& $true $false);
 
 # OR operation

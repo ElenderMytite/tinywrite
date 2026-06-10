@@ -1,6 +1,6 @@
 use std::{collections::HashMap, env::args, fs::read_to_string};
 
-use crate::vm::StackValue;
+use crate::vm::VM;
 mod ir;
 mod lexer;
 mod parser;
@@ -21,12 +21,12 @@ fn main() {
 
 /// Execute a single statement
 fn execute_statement(
-    code: &str,
+    vm: &mut vm::VM,
     variables: &mut HashMap<String, usize>,
-    env: &mut Vec<StackValue>,
+    stmt: &String,
 ) -> Result<(), String> {
     // Remove trailing semicolon
-    let code = code.trim().trim_end_matches(';').to_string() + ";";
+    let code = stmt.trim().trim_end_matches(';').to_string() + ";";
 
     // Tokenize
     let tokens = lexer::tokenize(&code);
@@ -37,9 +37,9 @@ fn execute_statement(
 
     // Generate IR
     let ir: Vec<ir::Command> = ir::ir(ast, variables, variables.len());
-
     // Execute
-    vm::execute(&ir, env);
+    vm.code = ir;
+    vm.execute();
 
     Ok(())
 }
@@ -54,7 +54,8 @@ fn run_files(args: &[String]) {
                     Ok(ast) => {
                         let vars = &mut HashMap::new();
                         let ir: Vec<ir::Command> = ir::ir(ast, vars, 0);
-                        vm::execute(&ir, &mut Vec::new());
+                        let mut vm = VM::new(ir);
+                        vm.execute();
                     }
                     Err(e) => {
                         eprintln!("Parse error in {}: {}", file, e);

@@ -40,6 +40,7 @@ pub enum Command {
     // vector operations,
     Len,
     VNew,
+    // HNew,
     Push,
     VPop,
     Get,

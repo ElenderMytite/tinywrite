@@ -3,7 +3,7 @@ use std::{
     io::{self, Write},
 };
 
-use crate::vm::{StackValue, print_value};
+use crate::vm::{StackValue, VM, print_value};
 
 /// Run interactive REPL (Read-Eval-Print Loop)
 pub fn run_repl() {
@@ -22,6 +22,7 @@ pub fn run_repl() {
     let mut statement_buffer = String::new();
     loop {
         // Show prompt
+        let mut vm = VM::new(Vec::new());
         if statement_buffer.is_empty() {
             print!(">> ");
         } else {
@@ -66,7 +67,7 @@ pub fn run_repl() {
                 // Check if statement is complete (ends with semicolon)
                 if statement_buffer.trim().ends_with(';') {
                     // Execute the statement
-                    match crate::execute_statement(&statement_buffer, &mut variables, &mut env) {
+                    match crate::execute_statement(&mut vm, &mut variables, &statement_buffer) {
                         Ok(_) => {}
                         Err(err) => {
                             eprintln!("Error: {}", err);
