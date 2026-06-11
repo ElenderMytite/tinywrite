@@ -70,7 +70,7 @@ pub fn run_repl() {
                     match crate::execute_statement(&mut vm, &mut variables, &statement_buffer) {
                         Ok(_) => {}
                         Err(err) => {
-                            eprintln!("Error: {}", err);
+                            eprintln!("Error: {:?}", err);
                         }
                     }
                     statement_buffer.clear();

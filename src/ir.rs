@@ -4,7 +4,7 @@ mod iteration;
 mod value;
 use crate::parser::types::{AstNode, Comparison, Computation, Logic, Operation};
 use crate::vm::StackValue;
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Command {
     //computation
     Add,
@@ -75,7 +75,7 @@ pub fn ir(
     //dbg!(&commands);
     commands
 }
-
+/// Registers a variable in the environment and returns its index. If the variable already exists, it just returns the existing index.
 fn register_variable(env: &mut HashMap<String, usize>, variable: String) -> usize {
     if !env.contains_key(&variable) {
         env.insert(variable.clone(), env.len());

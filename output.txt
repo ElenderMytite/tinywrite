@@ -1,7 +1,66 @@
-false
-true
-true
-true
-false
-true
-false
+0: VNew
+1: Put(Int(10))
+2: VPush
+3: Put(Int(20))
+4: VPush
+5: Put(Int(30))
+6: VPush
+7: Store(0)
+8: Cls
+9: VNew
+10: Put(Int(40))
+11: VPush
+12: Put(Int(50))
+13: VPush
+14: Store(1)
+15: Cls
+16: Load(0)
+17: Print
+18: Cls
+19: Load(1)
+20: Print
+21: Cls
+22: Put(Int(0))
+23: Put(Int(0))
+24: Put(Int(0))
+25: Store(2)
+26: Load(0)
+27: Store(3)
+28: Put(Int(0))
+29: Load(3)
+30: Load(2)
+31: Get
+32: Add
+33: Load(2)
+34: Put(Int(1))
+35: Add
+36: Dup
+37: Store(2)
+38: Load(3)
+39: Len
+40: Ls
+41: Jmp(29)
+42: Put(Int(0))
+43: Store(2)
+44: Load(1)
+45: Store(3)
+46: Put(Int(0))
+47: Load(3)
+48: Load(2)
+49: Get
+50: Add
+51: Load(2)
+52: Put(Int(1))
+53: Add
+54: Dup
+55: Store(2)
+56: Load(3)
+57: Len
+58: Ls
+59: Jmp(47)
+60: Add
+61: Print
+62: Cls
+[10, 20, 30]
+[40, 50]
+150

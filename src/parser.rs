@@ -1,13 +1,23 @@
 pub mod types;
+use std::fmt::Display;
+
 use types::{
     AstNode, Comparison, Computation, Expression, Keyword, Logic, Operation, ParsingMode, Part,
     Value, VectorOp,
 };
+#[derive(Debug)]
+pub struct ParseError;
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Parse Error!")
+    }
+}
 pub fn astify(
     tokens: &Vec<String>,
     block_type: ParsingMode,
     index: &mut usize,
-) -> Result<AstNode, String> {
+) -> Result<AstNode, ParseError> {
     let mut buffer: Vec<Part> = Vec::new();
     let mut nodes: Vec<AstNode> = Vec::new();
     while *index < tokens.len() {
@@ -17,8 +27,7 @@ pub fn astify(
                 buffer.push(Part::Expression(
                     astify(tokens, ParsingMode::Expression, index)
                         .unwrap()
-                        .expr()
-                        .unwrap(),
+                        .expr()?,
                 ));
             }
             "{" => {
@@ -96,13 +105,13 @@ pub fn astify(
                         "false" => buffer.push(Part::Keyword(Keyword::False)),
                         "tab" => buffer.push(Part::Keyword(Keyword::Tab)),
                         "line" => buffer.push(Part::Keyword(Keyword::Newline)),
-                        _ => return Err(format!("unexpected keywrord: {keyword}")),
+                        _ => return Err(ParseError),
                     }
                 } else {
-                    return Err("expected keyword after $ sign, found end of file".to_string());
+                    return Err(ParseError);
                 }
             }
-            x => return Err(format!("unexpected token: \"{x}\"")),
+            _ => return Err(ParseError),
         }
         *index += 1;
     }
@@ -111,9 +120,7 @@ pub fn astify(
             match part {
                 Part::Expression(n) => nodes.push(AstNode::Expression(n)),
                 _ => {
-                    return Err(format!(
-                        "unexpected part in buffer at end of tokens: {part:?}"
-                    ));
+                    return Err(ParseError);
                 }
             }
         }

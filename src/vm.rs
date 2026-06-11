@@ -1,5 +1,4 @@
 use crate::ir::Command;
-use std::cmp::max;
 mod instructions;
 pub(crate) struct VM {
     pub ip: usize,
@@ -20,67 +19,140 @@ impl VM {
             env: Vec::new(),
         }
     }
-    pub fn execute(&mut self) {
+    pub fn execute(&mut self) -> Result<(), TypeError> {
         while self.ip < self.code.len() {
-            match self.code[self.ip].clone() {
-                Command::Add => self.add(),
-                Command::Sub => self.sub(),
-                Command::Mul => self.mul(),
-                Command::Div => self.div(),
-                Command::Mod => self.modd(),
-                Command::Byte => self.byte(),
-                Command::Char => self.char(),
-                Command::Cls => self.cls(),
-                Command::Dup => self.dup(),
-                Command::Swap => self.swap(),
-                Command::Del => self.drop(),
-                Command::Put(value) => self.put(value),
-                Command::Print => self.print(),
-                Command::Eq => self.eq(),
-                Command::Neq => self.neq(),
-                Command::Geq => self.geq(),
-                Command::Leq => self.leq(),
-                Command::Gt => self.gt(),
-                Command::Ls => self.ls(),
-                Command::Not => self.not(),
-                Command::And => self.and(),
-                Command::Or => self.or(),
-                Command::Xor => self.xor(),
-                Command::Nor => self.nor(),
-                Command::Nand => self.nand(),
-                Command::Load(adress) => {
-                    if adress >= self.env.len() {
-                        self.stack.push(StackValue::Nil);
-                    } else {
-                        self.stack.push(self.env[adress].clone());
-                    }
+            // eprintln!(
+            //     "{}: {:?}; {:?}",
+            //     self.ip,
+            //     self.stack.clone(),
+            //     self.code[self.ip].clone()
+            // );
+            let result = match self.code[self.ip].clone() {
+                Command::Add => {
+                    self.add();
+                    Ok(())
                 }
-                Command::Store(adress) => {
-                    assert!(self.stack.len() >= 1);
-                    self.env
-                        .resize(max(adress + 1, self.env.len()), StackValue::Nil);
-                    self.env[adress] = self.stack.pop().unwrap();
+                Command::Sub => {
+                    self.sub();
+                    Ok(())
                 }
-                Command::Jmp(adress) => {
-                    assert!(self.stack.len() >= 1);
-                    if self.stack.pop().unwrap().bool().unwrap() {
-                        self.ip = adress;
-                        continue;
-                    }
+                Command::Mul => {
+                    self.mul();
+                    Ok(())
                 }
-                Command::Len => self.len(),
-                Command::VNew => self.new_vec(),
-                // Command::HNew => {
-                //     let ptr = self.heap.len();
-                //     self.heap.push(HeapValue::HMap(HashMap::new()));
-                //     self.stack.push(StackValue::Ptr(ptr));
-                // }
-                Command::VPop => self.vec_pop(),
-                Command::VPush => self.vec_push(),
-                Command::Get => self.vec_get(),
-            }
+                Command::Div => {
+                    self.div();
+                    Ok(())
+                }
+                Command::Mod => {
+                    self.modd();
+                    Ok(())
+                }
+                Command::Byte => {
+                    self.byte();
+                    Ok(())
+                }
+                Command::Char => {
+                    self.char();
+                    Ok(())
+                }
+                Command::Cls => {
+                    self.cls();
+                    Ok(())
+                }
+                Command::Dup => {
+                    self.dup();
+                    Ok(())
+                }
+                Command::Swap => {
+                    self.swap();
+                    Ok(())
+                }
+                Command::Del => {
+                    self.drop();
+                    Ok(())
+                }
+                Command::Put(value) => {
+                    self.put(value);
+                    Ok(())
+                }
+                Command::Print => {
+                    self.print();
+                    Ok(())
+                }
+                Command::Eq => {
+                    self.eq();
+                    Ok(())
+                }
+                Command::Neq => {
+                    self.neq();
+                    Ok(())
+                }
+                Command::Geq => {
+                    self.geq();
+                    Ok(())
+                }
+                Command::Leq => {
+                    self.leq();
+                    Ok(())
+                }
+                Command::Gt => {
+                    self.gt();
+                    Ok(())
+                }
+                Command::Ls => {
+                    self.ls();
+                    Ok(())
+                }
+                Command::Not => {
+                    self.not();
+                    Ok(())
+                }
+                Command::And => {
+                    self.and();
+                    Ok(())
+                }
+                Command::Or => {
+                    self.or();
+                    Ok(())
+                }
+                Command::Xor => {
+                    self.xor();
+                    Ok(())
+                }
+                Command::Nor => {
+                    self.nor();
+                    Ok(())
+                }
+                Command::Nand => {
+                    self.nand();
+                    Ok(())
+                }
+                Command::Load(addr) => {
+                    self.load(addr);
+                    Ok(())
+                }
+                Command::Store(addr) => {
+                    self.store(addr);
+                    Ok(())
+                }
+                Command::Jmp(addr) => {
+                    self.jmp(addr);
+                    Ok(())
+                }
+                Command::Get => self.vec_get().map(|_| ()),
+                Command::Len => self.len().map(|_| ()),
+                Command::VNew => {
+                    self.new_vec();
+                    Ok(())
+                }
+                Command::VPop => self.vec_pop().map(|_| ()),
+                Command::VPush => self.vec_push().map(|_| ()),
+            };
+            result?;
             self.ip += 1;
         }
+        Ok(())
     }
 }
 pub struct TypeError;

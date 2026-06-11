@@ -49,17 +49,18 @@ pub(super) fn ir_iteration(
                         Value::Name(s) => register_variable(variables, s.clone()),
                         _ => panic!("Non-name node found inside vector unpacking!"),
                     };
-                    commands.push(Command::Load(vector));
-                    commands.push(Command::Store(vec_ptr));
                     commands.push(Command::Put(StackValue::Int(0)));
                     commands.push(Command::Store(idx));
+                    commands.push(Command::Load(vector));
+                    commands.push(Command::Store(vec_ptr));
                     let label = index + commands.len();
-                    // put neultral element to the stack before the first iteration (0 for addition, 1 for multiplication)
+                    // put neultral element to the stack before the first iteration (0 for addition, 1 for multiplication);
+                    // Inverse operations first apply normal opertation on both sides and then apply the inverse operation to the current value on the stack, so we need to put the neutral element before the first iteration
                     match outer {
-                        Some(Operation::Computation(Computation::Add)) => {
+                        Some(Operation::Computation(Computation::Add | Computation::Sub)) => {
                             commands.push(Command::Put(StackValue::Int(0)));
                         }
-                        Some(Operation::Computation(Computation::Mul)) => {
+                        Some(Operation::Computation(Computation::Mul | Computation::Div)) => {
                             commands.push(Command::Put(StackValue::Int(1)));
                         }
                         _ => (),
@@ -114,15 +115,6 @@ pub(super) fn ir_iteration(
                     commands.push(Command::Len);
                     commands.push(Command::Ls);
                     commands.push(Command::Jmp(label));
-                    match outer {
-                        Some(Operation::Computation(Computation::Div | Computation::Mul)) => {
-                            commands.push(Command::Mul)
-                        }
-                        Some(Operation::Computation(Computation::Sub | Computation::Add)) => {
-                            commands.push(Command::Add)
-                        }
-                        _ => (),
-                    }
                 }
                 free_variable(variables, format!("--vec-{v_idx}"));
                 free_variable(variables, format!("--idx-{k_idx}"));

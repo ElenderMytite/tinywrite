@@ -1,3 +1,5 @@
+use crate::parser::ParseError;
+
 #[derive(PartialEq, Eq)]
 pub(crate) enum ParsingMode {
     Expression,
@@ -9,10 +11,10 @@ pub(crate) enum AstNode {
     BlockCode(Vec<AstNode>),
 }
 impl AstNode {
-    pub fn expr(self) -> Result<Expression, ()> {
+    pub fn expr(self) -> Result<Expression, ParseError> {
         match self {
             Self::Expression(expr) => Ok(expr),
-            _ => Err(()),
+            _ => Err(ParseError),
         }
     }
 }
