@@ -73,7 +73,6 @@ pub fn ir(
         AstNode::BlockCode(nodes) => {
             for node in nodes {
                 commands.append(&mut ir(node, variables, index + commands.len()));
-                commands.push(Command::Cls);
             }
         }
     }

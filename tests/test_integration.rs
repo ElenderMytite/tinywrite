@@ -1,7 +1,24 @@
-use tinywrite::InterpretationError;
-use tinywrite::lexer;
-use tinywrite::parser;
-use tinywrite::parser::types;
+use std::collections::HashMap;
+use tinywrite::{
+    InterpretationError, ir, lexer, parser,
+    parser::types,
+    vm::{StackValue, VM},
+};
+
+/// Helper to execute complete program and get stack result
+fn execute_program(input: &str) -> Result<Option<StackValue>, InterpretationError> {
+    let tokens = lexer::tokenize(input);
+    let mut index = 0;
+    let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)?;
+
+    let mut variables = HashMap::new();
+    let commands = ir::ir(ast, &mut variables, 0);
+
+    let mut vm = VM::new(commands);
+    vm.execute_program(false)?;
+
+    Ok(vm.stack.pop())
+}
 
 #[test]
 fn test_integration_lexer_to_parser_simple_addition() {
@@ -84,7 +101,7 @@ fn test_integration_lexer_to_parser_logical_operators() {
     let operators = vec!["&", "|", "^", "!", "!&", "!|"];
 
     for op in operators {
-        let input = format!("({} 1 0)", op);
+        let input = format!("({} $true $false)", op);
         let tokens = lexer::tokenize(&input);
 
         // Verify tokens are correct
@@ -299,4 +316,293 @@ fn test_integration_single_vs_multi_char_operators() {
         let result = parser::astify(&tokens, types::ParsingMode::Code, &mut index);
         assert!(result.is_ok(), "Parse failed for: {}", input);
     }
+}
+
+// ====== FULL PROGRAM EXECUTION TESTS ======
+
+#[test]
+fn test_integration_execute_simple_number() -> Result<(), InterpretationError> {
+    let result = execute_program("5;")?;
+    assert_eq!(result, Some(StackValue::Int(5)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_simple_addition() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ 5 3);")?;
+    assert_eq!(result, Some(StackValue::Int(8)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_simple_subtraction() -> Result<(), InterpretationError> {
+    let result = execute_program("(- 10 3);")?;
+    assert_eq!(result, Some(StackValue::Int(7)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_simple_multiplication() -> Result<(), InterpretationError> {
+    let result = execute_program("(* 4 5);")?;
+    assert_eq!(result, Some(StackValue::Int(20)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_simple_division() -> Result<(), InterpretationError> {
+    let result = execute_program("(/ 20 4);")?;
+    assert_eq!(result, Some(StackValue::Int(5)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_simple_modulo() -> Result<(), InterpretationError> {
+    let result = execute_program("(% 17 5);")?;
+    assert_eq!(result, Some(StackValue::Int(2)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_nested_expressions() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ (* 2 3) 4);")?;
+    assert_eq!(result, Some(StackValue::Int(10)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_deeply_nested_arithmetic() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ (- (* (/ 100 2) 3) 5) 10);")?;
+    assert_eq!(result, Some(StackValue::Int(155)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_greater_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(> 10 5);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_greater_false() -> Result<(), InterpretationError> {
+    let result = execute_program("(> 5 10);")?;
+    assert_eq!(result, Some(StackValue::Bool(false)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_less_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(< 5 10);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_equal_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(== 5 5);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_not_equal_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(!= 5 3);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_greater_or_equal() -> Result<(), InterpretationError> {
+    let result = execute_program("(>= 5 5);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_less_or_equal() -> Result<(), InterpretationError> {
+    let result = execute_program("(<= 5 5);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_logic_and_both_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(& $true $true);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_logic_or_both_true() -> Result<(), InterpretationError> {
+    let result = execute_program("(| $true $true);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_logic_or_mixed() -> Result<(), InterpretationError> {
+    let result = execute_program("(| $false $true);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_logic_xor_different() -> Result<(), InterpretationError> {
+    let result = execute_program("(^ $true $false);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_logic_xor_same() -> Result<(), InterpretationError> {
+    let result = execute_program("(^ $true $true);")?;
+    assert_eq!(result, Some(StackValue::Bool(false)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_comparison_with_arithmetic() -> Result<(), InterpretationError> {
+    let result = execute_program("(> (+ 5 3) 7);")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_multiple_comparisons() -> Result<(), InterpretationError> {
+    let result = execute_program("(& (> 10 5) (< 3 7));")?;
+    assert_eq!(result, Some(StackValue::Bool(true)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_negative_numbers() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ -5 3);")?;
+    assert_eq!(result, Some(StackValue::Int(-2)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_subtraction_negative_result() -> Result<(), InterpretationError> {
+    let result = execute_program("(- 3 5);")?;
+    assert_eq!(result, Some(StackValue::Int(-2)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_division_integer() -> Result<(), InterpretationError> {
+    let result = execute_program("(/ 7 2);")?;
+    assert_eq!(result, Some(StackValue::Int(3)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_modulo_with_remainder() -> Result<(), InterpretationError> {
+    let result = execute_program("(% 10 3);")?;
+    assert_eq!(result, Some(StackValue::Int(1)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_modulo_no_remainder() -> Result<(), InterpretationError> {
+    let result = execute_program("(% 10 5);")?;
+    assert_eq!(result, Some(StackValue::Int(0)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_very_deeply_nested() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ (+ (+ (+ 1 1) 1) 1) 1);")?;
+    assert_eq!(result, Some(StackValue::Int(5)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_chain_of_multiplications() -> Result<(), InterpretationError> {
+    let result = execute_program("(* (* 2 3) 4);")?;
+    assert_eq!(result, Some(StackValue::Int(24)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_mixed_arithmetic() -> Result<(), InterpretationError> {
+    let result = execute_program("(+ (- 10 3) (* 2 4));")?;
+    assert_eq!(result, Some(StackValue::Int(15)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_long_calculation_chain() -> Result<(), InterpretationError> {
+    let result = execute_program("(* (- 20 10) (+ 2 3));")?;
+    assert_eq!(result, Some(StackValue::Int(50)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_zero() -> Result<(), InterpretationError> {
+    let result = execute_program("0;")?;
+    assert_eq!(result, Some(StackValue::Int(0)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_large_number() -> Result<(), InterpretationError> {
+    let result = execute_program("999999;")?;
+    assert_eq!(result, Some(StackValue::Int(999999)));
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_all_arithmetic_operators() -> Result<(), InterpretationError> {
+    let test_cases = vec![
+        ("(+ 5 3);", StackValue::Int(8)),
+        ("(- 10 3);", StackValue::Int(7)),
+        ("(* 4 5);", StackValue::Int(20)),
+        ("(/ 20 4);", StackValue::Int(5)),
+        ("(% 17 5);", StackValue::Int(2)),
+    ];
+
+    for (code, expected) in test_cases {
+        let result = execute_program(code)?;
+        assert_eq!(result, Some(expected), "Failed for: {}", code);
+    }
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_all_comparison_operators() -> Result<(), InterpretationError> {
+    let test_cases = vec![
+        ("(> 10 5);", StackValue::Bool(true)),
+        ("(> 4 5);", StackValue::Bool(false)),
+        ("(< 5 10);", StackValue::Bool(true)),
+        ("(< 5 4);", StackValue::Bool(false)),
+        ("(== 5 5);", StackValue::Bool(true)),
+        ("(== 5 7);", StackValue::Bool(false)),
+        ("(!= 5 3);", StackValue::Bool(true)),
+        ("(!= 5 5);", StackValue::Bool(false)),
+        ("(>= 5 5);", StackValue::Bool(true)),
+        ("(>= 1 5);", StackValue::Bool(false)),
+        ("(<= 3 5);", StackValue::Bool(true)),
+        ("(<= 6 5);", StackValue::Bool(false)),
+    ];
+
+    for (code, expected) in test_cases {
+        let result = execute_program(code)?;
+        assert_eq!(result, Some(expected), "Failed for: {}", code);
+    }
+    Ok(())
+}
+
+#[test]
+fn test_integration_execute_all_logic_operators() -> Result<(), InterpretationError> {
+    let test_cases = vec![
+        ("(& $true $true);", StackValue::Bool(true)),
+        ("(| $true $false);", StackValue::Bool(true)),
+        ("(^ $true $false);", StackValue::Bool(true)),
+    ];
+
+    for (code, expected) in test_cases {
+        let result = execute_program(code)?;
+        assert_eq!(result, Some(expected), "Failed for: {}", code);
+    }
+    Ok(())
 }
