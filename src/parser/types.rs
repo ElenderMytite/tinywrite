@@ -1,31 +1,31 @@
 use crate::parser::ParseError;
 
 #[derive(PartialEq, Eq)]
-pub(crate) enum ParsingMode {
+pub enum ParsingMode {
     Expression,
     Code,
 }
 #[derive(Debug, Clone)]
-pub(crate) enum AstNode {
-    Expression(Expression),
+pub enum AstNode {
+    Expression(Box<Expression>),
     BlockCode(Vec<AstNode>),
 }
 impl AstNode {
     pub fn expr(self) -> Result<Expression, ParseError> {
         match self {
-            Self::Expression(expr) => Ok(expr),
-            _ => Err(ParseError),
+            Self::Expression(expr) => Ok(*expr),
+            _ => Err(ParseError::NodeTypeError),
         }
     }
 }
 #[derive(Debug, Clone)]
-pub(crate) struct Expression {
+pub struct Expression {
     pub(crate) operation: Option<Operation>,
     pub(crate) left: Vec<Value>,
     pub(crate) right: Vec<Value>,
 }
 #[derive(Debug, Clone)]
-pub(crate) enum Value {
+pub enum Value {
     Name(String),
     Number(isize),
     Bool(bool),
@@ -41,7 +41,7 @@ impl Value {
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum Operation {
+pub enum Operation {
     Comparison(Comparison),
     Computation(Computation),
     Logic(Logic),
@@ -50,7 +50,7 @@ pub(crate) enum Operation {
     Set,
 }
 #[derive(Debug, Clone)]
-pub(super) enum Part {
+pub enum Part {
     Operation(Operation),
     Expression(Expression),
     Call,
@@ -59,23 +59,19 @@ pub(super) enum Part {
     Number(isize),
 }
 #[derive(Debug, Clone, Copy)]
-pub(super) enum Keyword {
-    If,
-    Else,
-    Redo,
-    End,
+pub enum Keyword {
     True,
     False,
     Tab,
     Newline,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum VectorOp {
+pub enum VectorOp {
     Pack,
     Unpack,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Comparison {
+pub enum Comparison {
     Greater,
     Less,
     Equal,
@@ -84,7 +80,7 @@ pub(crate) enum Comparison {
     NotEqual,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Computation {
+pub enum Computation {
     Add,
     Sub,
     Mul,
@@ -92,7 +88,7 @@ pub(crate) enum Computation {
     Mod,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Logic {
+pub enum Logic {
     And,
     Or,
     Xor,

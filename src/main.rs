@@ -1,70 +1,35 @@
-use crate::{
-    parser::ParseError,
+use std::{collections::HashMap, env::args, fs::read_to_string};
+use tinywrite::{
+    InterpretationError, ir, lexer, parser, repl,
     vm::{TypeError, VM},
 };
-use std::{collections::HashMap, env::args, fs::read_to_string};
-mod ir;
-mod lexer;
-mod parser;
-mod repl;
-mod vm;
-impl From<ParseError> for InterpretationError {
-    fn from(value: ParseError) -> Self {
-        Self::Parsing(value)
-    }
-}
-impl From<TypeError> for InterpretationError {
-    fn from(value: TypeError) -> Self {
-        Self::Execution(value)
-    }
-}
-#[derive(Debug)]
-enum InterpretationError {
-    Parsing(ParseError),
-    Execution(TypeError),
-}
 fn main() -> Result<(), InterpretationError> {
-    let args = args().skip(1).collect::<Vec<String>>();
+    let args: Vec<String> = args().skip(1).collect();
 
-    if args.is_empty() {
+    // Check for --debug flag
+    let debug = args.contains(&"--debug".to_string());
+
+    // Filter out the --debug flag from file arguments
+    let file_args: Vec<String> = args.into_iter().filter(|arg| arg != "--debug").collect();
+
+    if file_args.is_empty() {
         // Interactive REPL mode
+        if debug {
+            println!("[DEBUG MODE ENABLED]");
+        }
         repl::run_repl();
     } else {
         // File execution mode
-        run_files(&args)?;
+        if debug {
+            println!("[DEBUG MODE ENABLED]");
+        }
+        run_files(&file_args, debug)?;
     }
-    Ok(())
-}
-
-/// Execute a single statement
-fn execute_statement(
-    vm: &mut vm::VM,
-    debug: bool,
-    variables: &mut HashMap<String, usize>,
-    stmt: &String,
-) -> Result<(), InterpretationError> {
-    // Remove trailing semicolon
-    let code = stmt.trim().trim_end_matches(';').to_string() + ";";
-
-    // Tokenize
-    let tokens = lexer::tokenize(&code);
-
-    // Parse
-    let ast = parser::astify(&tokens, parser::types::ParsingMode::Code, &mut 0)?;
-
-    // Generate IR
-    let ir: Vec<ir::Command> = ir::ir(ast, variables, variables.len());
-    // Execute
-    vm.code = ir;
-    eprintln!("{:?}", vm.code.clone());
-    vm.ip = 0;
-    vm.execute_program(debug)?;
-
     Ok(())
 }
 
 /// Run files from command line arguments
-fn run_files(args: &[String]) -> Result<(), TypeError> {
+fn run_files(args: &[String], debug: bool) -> Result<(), TypeError> {
     for file in args {
         match read_to_string(format!("examples/{}", file.trim())) {
             Ok(text) => {
@@ -73,16 +38,18 @@ fn run_files(args: &[String]) -> Result<(), TypeError> {
                     Ok(ast) => {
                         let vars = &mut HashMap::new();
                         let ir: Vec<ir::Command> = ir::ir(ast, vars, 0);
-                        println!(
-                            "{}",
-                            ir.iter()
-                                .enumerate() //
-                                .map(|(k, v)| format!("{k}: {v:?}"))
-                                .collect::<Vec<String>>()
-                                .join('\n'.to_string().as_str())
-                        );
+                        if debug {
+                            println!(
+                                "{}",
+                                ir.iter()
+                                    .enumerate()
+                                    .map(|(k, v)| format!("{k}: {v:?}"))
+                                    .collect::<Vec<String>>()
+                                    .join("\n")
+                            );
+                        }
                         let mut vm = VM::new(ir);
-                        vm.execute_program(true)?;
+                        vm.execute_program(debug)?;
                     }
                     Err(e) => {
                         eprintln!("Parse error in {}: {}", file, e);

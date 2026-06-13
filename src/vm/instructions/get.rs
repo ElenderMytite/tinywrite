@@ -1,9 +1,6 @@
 // get can be used for both hmap and vec types in this language. When get command is called,
 // vm first checks if it is a hmap or a vec, and then calls corresponding command
-use crate::{
-    VM,
-    vm::{HeapValue, TypeError},
-};
+use crate::vm::{HeapValue, TypeError, VM};
 impl VM {
     fn extract_heap_value(&mut self, index: usize) -> Result<&HeapValue, TypeError> {
         Ok(&mut self.heap[index])

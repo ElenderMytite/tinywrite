@@ -1,7 +1,9 @@
 use std::collections::HashSet;
+
 #[derive(Debug)]
 enum WritingMode {
     None,
+    AfterNewline,
     Comment,
     Name,
     Int,
@@ -9,15 +11,21 @@ enum WritingMode {
 
 pub fn tokenize(text: &str) -> Vec<String> {
     let mut tokens: Vec<String> = vec![];
-    let mut mode: WritingMode = WritingMode::None;
+    let mut mode: WritingMode = WritingMode::AfterNewline;
     let mut buffer: String = String::new();
     for c in text.chars() {
         match mode {
+            WritingMode::AfterNewline => {
+                if c == ';' {
+                    mode = WritingMode::Comment;
+                    continue;
+                }
+            }
             WritingMode::Comment => {
                 if c != '\n' {
                     continue;
                 } else {
-                    mode = WritingMode::None;
+                    mode = WritingMode::AfterNewline;
                 }
             }
             WritingMode::Name => {
@@ -50,10 +58,11 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 buffer.push(c);
                 mode = WritingMode::Name;
             }
-            '#' => {
+            ';' => {
+                tokens.push(";".to_string());
                 mode = WritingMode::Comment;
             }
-            _ if c.is_numeric() => {
+            '-' | '0'..='9' => {
                 buffer.clear();
                 buffer.push(c);
                 mode = WritingMode::Int;
@@ -65,6 +74,9 @@ pub fn tokenize(text: &str) -> Vec<String> {
                 mode = WritingMode::None;
             }
         }
+    }
+    if !buffer.is_empty() {
+        tokens.push(buffer);
     }
     combine_tokens(tokens)
 }

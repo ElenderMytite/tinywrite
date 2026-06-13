@@ -4,7 +4,7 @@ use std::{
     hash::Hash,
 };
 mod instructions;
-pub(crate) struct VM {
+pub struct VM {
     pub ip: usize,
     flush: bool,
     pub code: Vec<Command>,

@@ -3,7 +3,10 @@ use std::{
     io::{self, Write},
 };
 
-use crate::vm::{VM, print_value};
+use crate::{
+    execute_statement,
+    vm::{VM, print_value},
+};
 
 /// Run interactive REPL (Read-Eval-Print Loop)
 pub fn run_repl() {
@@ -70,8 +73,7 @@ pub fn run_repl() {
                 // Check if statement is complete (ends with semicolon)
                 if statement_buffer.trim().ends_with(';') {
                     // Execute the statement
-                    match crate::execute_statement(&mut vm, true, &mut variables, &statement_buffer)
-                    {
+                    match execute_statement(&mut vm, true, &mut variables, &statement_buffer) {
                         Ok(_) => {}
                         Err(err) => {
                             eprintln!("Error: {:?}", err);

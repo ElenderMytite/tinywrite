@@ -5,8 +5,15 @@ use types::{
     AstNode, Comparison, Computation, Expression, Keyword, Logic, Operation, ParsingMode, Part,
     Value, VectorOp,
 };
-#[derive(Debug)]
-pub struct ParseError;
+#[derive(Debug, Clone)]
+pub enum ParseError {
+    UnexpectedFunction(String),
+    UnexpectedEOFAfter(String),
+    UnexpectedToken(String),
+    UnexpectedEndOfExpression,
+    NonEmptyBuffer(Part),
+    NodeTypeError,
+}
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -38,7 +45,7 @@ pub fn astify(
                 if block_type == ParsingMode::Expression {
                     let node = parse_expression(&buffer);
                     buffer.clear();
-                    return Ok(AstNode::Expression(node));
+                    return Ok(AstNode::Expression(Box::new(node)));
                 }
             }
             "}" => {
@@ -56,7 +63,7 @@ pub fn astify(
                     if !buffer.is_empty() {
                         let node = parse_expression(&buffer);
                         buffer.clear();
-                        nodes.push(AstNode::Expression(node));
+                        nodes.push(AstNode::Expression(Box::new(node)));
                     }
                 }
             },
@@ -97,36 +104,23 @@ pub fn astify(
                 *index += 1;
                 if let Some(keyword) = tokens.get(*index) {
                     match keyword.to_lowercase().as_str() {
-                        "if" => buffer.push(Part::Keyword(Keyword::If)),
-                        "else" => buffer.push(Part::Keyword(Keyword::Else)),
-                        "end" => buffer.push(Part::Keyword(Keyword::End)),
-                        "redo" => buffer.push(Part::Keyword(Keyword::Redo)),
                         "true" => buffer.push(Part::Keyword(Keyword::True)),
                         "false" => buffer.push(Part::Keyword(Keyword::False)),
                         "tab" => buffer.push(Part::Keyword(Keyword::Tab)),
                         "line" => buffer.push(Part::Keyword(Keyword::Newline)),
-                        _ => return Err(ParseError),
+                        func => return Err(ParseError::UnexpectedFunction(func.to_string())),
                     }
                 } else {
-                    return Err(ParseError);
+                    return Err(ParseError::UnexpectedEOFAfter("$".to_string()));
                 }
             }
-            _ => return Err(ParseError),
+            token => return Err(ParseError::UnexpectedToken(token.to_string())),
         }
         *index += 1;
     }
-    if !buffer.is_empty() {
-        for part in buffer {
-            match part {
-                Part::Expression(n) => nodes.push(AstNode::Expression(n)),
-                _ => {
-                    return Err(ParseError);
-                }
-            }
-        }
-    }
+    parse_expression(&buffer);
     match block_type {
-        ParsingMode::Expression => panic!("unexpected end of expression"),
+        ParsingMode::Expression => return Err(ParseError::UnexpectedEndOfExpression),
         ParsingMode::Code => Ok(AstNode::BlockCode(nodes)),
     }
 }
@@ -165,9 +159,6 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                 }
             }
             Part::Keyword(word) => match word {
-                Keyword::If | Keyword::Else | Keyword::End | Keyword::Redo => {
-                    panic!("Unexpected control flow keyword inside expression!");
-                }
                 Keyword::True | Keyword::False | Keyword::Newline | Keyword::Tab => {
                     if operation.is_none() {
                         left.push(buffer[idx].clone());
@@ -199,7 +190,6 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
                 Keyword::False => Value::Bool(false),
                 Keyword::Tab => Value::Char('\t'),
                 Keyword::Newline => Value::Char('\n'),
-                _ => panic!("can't convert keyword to value"),
             },
             _ => panic!("can't parse unary expression"),
         })
