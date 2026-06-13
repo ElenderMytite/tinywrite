@@ -7,7 +7,7 @@ use types::{
 };
 #[derive(Debug, Clone)]
 pub enum ParseError {
-    UnexpectedFunction(String),
+    UnexpectedConstant(String),
     UnexpectedEOFAfter(String),
     UnexpectedToken(String),
     UnexpectedEndOfExpression,
@@ -31,11 +31,11 @@ pub fn astify(
         match tokens[*index].as_str() {
             "(" => {
                 *index += 1;
-                buffer.push(Part::Expression(
+                buffer.push(Part::Value(Value::Expression(
                     astify(tokens, ParsingMode::Expression, index)
                         .unwrap()
                         .expr()?,
-                ));
+                )));
             }
             "{" => {
                 *index += 1;
@@ -55,7 +55,7 @@ pub fn astify(
             }
             ";" => match block_type {
                 ParsingMode::Expression => {
-                    let expr = Part::Expression(parse_expression(&buffer));
+                    let expr = Part::Value(Value::Expression(parse_expression(&buffer)));
                     buffer.clear();
                     buffer.push(expr.clone());
                 }
@@ -95,10 +95,10 @@ pub fn astify(
             x if x.chars().all(|c| c.is_numeric())
                 | (x.starts_with("-") && x[1..].chars().all(|c| c.is_numeric())) =>
             {
-                buffer.push(Part::Number(x.parse::<isize>().unwrap()));
+                buffer.push(Part::Value(Value::Number(x.parse::<isize>().unwrap())));
             }
             x if x.chars().all(|c| c.is_alphanumeric() || c == '_') => {
-                buffer.push(Part::Name(x.to_string()));
+                buffer.push(Part::Value(Value::Name(x.to_string())));
             }
             "$" => {
                 *index += 1;
@@ -108,7 +108,11 @@ pub fn astify(
                         "false" => buffer.push(Part::Keyword(Keyword::False)),
                         "tab" => buffer.push(Part::Keyword(Keyword::Tab)),
                         "line" => buffer.push(Part::Keyword(Keyword::Newline)),
-                        func => return Err(ParseError::UnexpectedFunction(func.to_string())),
+                        // only works for ascii
+                        c if keyword.len() == 1 => {
+                            buffer.push(Part::Value(Value::Char(c.chars().nth(0).unwrap())))
+                        }
+                        func => return Err(ParseError::UnexpectedConstant(func.to_string())),
                     }
                 } else {
                     return Err(ParseError::UnexpectedEOFAfter("$".to_string()));
@@ -139,7 +143,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                     panic!("two kinds of operations found inside one expression")
                 }
             }
-            Part::Name(_) | Part::Number(_) | Part::Expression(_) => {
+            Part::Value(_) => {
                 if operation.is_none() {
                     left.push(buffer[idx].clone());
                 } else {
@@ -149,7 +153,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
             Part::Call => {
                 idx += 1;
                 if idx < buffer.len() {
-                    if let Part::Name(func) = buffer[idx].clone() {
+                    if let Part::Value(Value::Name(func)) = buffer[idx].clone() {
                         operation = Some(Operation::Call(func));
                     } else {
                         panic!("Expected function name after call operator!");
@@ -182,9 +186,7 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
     buffer
         .iter()
         .map(|part| match part.clone() {
-            Part::Name(s) => Value::Name(s),
-            Part::Number(x) => Value::Number(x),
-            Part::Expression(expr) => Value::Expression(expr),
+            Part::Value(x) => x,
             Part::Keyword(b) => match b {
                 Keyword::True => Value::Bool(true),
                 Keyword::False => Value::Bool(false),

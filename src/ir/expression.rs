@@ -49,7 +49,6 @@ pub(super) fn ir_expression(
                     );
                 }
                 Operation::Set => {
-                    dbg!(variables.len());
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
                         assert!(matches!(expression.left[i], Value::Name(_)));
@@ -64,7 +63,6 @@ pub(super) fn ir_expression(
                             expression.left[i].get_name().unwrap(),
                         )))
                     }
-                    dbg!(variables.len());
                 }
                 Operation::Comparison(_) => {
                     assert_eq!(expression.left.len(), expression.right.len());

@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// Run interactive REPL (Read-Eval-Print Loop)
-pub fn run_repl() {
+pub fn run_repl(debug: bool) {
     println!("╔════════════════════════════════════════╗");
     println!("║     TinyWrite Interactive REPL         ║");
     println!("╚════════════════════════════════════════╝");
@@ -41,7 +41,9 @@ pub fn run_repl() {
             }
             Ok(_) => {
                 let input = line_buffer.trim();
-                dbg!(input);
+                if debug {
+                    dbg!(input);
+                }
                 // Handle special commands
                 match input {
                     "exit" | "quit" => {
@@ -73,7 +75,7 @@ pub fn run_repl() {
                 // Check if statement is complete (ends with semicolon)
                 if statement_buffer.trim().ends_with(';') {
                     // Execute the statement
-                    match execute_statement(&mut vm, true, &mut variables, &statement_buffer) {
+                    match execute_statement(&mut vm, debug, &mut variables, &statement_buffer) {
                         Ok(_) => {}
                         Err(err) => {
                             eprintln!("Error: {:?}", err);

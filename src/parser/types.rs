@@ -52,11 +52,9 @@ pub enum Operation {
 #[derive(Debug, Clone)]
 pub enum Part {
     Operation(Operation),
-    Expression(Expression),
     Call,
-    Name(String),
     Keyword(Keyword),
-    Number(isize),
+    Value(Value),
 }
 #[derive(Debug, Clone, Copy)]
 pub enum Keyword {

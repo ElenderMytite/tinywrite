@@ -14,7 +14,7 @@ fn main() -> Result<(), InterpretationError> {
         if debug {
             println!("[DEBUG MODE ENABLED]");
         }
-        repl::run_repl();
+        repl::run_repl(debug);
     } else {
         // File execution mode
         if debug {

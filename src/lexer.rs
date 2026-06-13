@@ -52,22 +52,28 @@ pub fn tokenize(text: &str) -> Vec<String> {
             }
             WritingMode::None => (),
         }
+        let alpha = c.is_alphabetic() || c == '_';
+        let num = c.is_numeric() || c == '-';
+        let punct = c.is_ascii_punctuation();
         match c {
-            '_' | 'a'..='z' | 'A'..='Z' => {
+            _ if alpha => {
                 buffer.clear();
                 buffer.push(c);
                 mode = WritingMode::Name;
+            }
+            _ if num => {
+                buffer.clear();
+                buffer.push(c);
+                mode = WritingMode::Int;
             }
             ';' => {
                 tokens.push(";".to_string());
                 mode = WritingMode::Comment;
             }
-            '-' | '0'..='9' => {
-                buffer.clear();
-                buffer.push(c);
-                mode = WritingMode::Int;
+            '\n' => {
+                mode = WritingMode::AfterNewline;
             }
-            _ if c.is_ascii_punctuation() => {
+            _ if punct => {
                 tokens.push(format!("{}", c));
             }
             _ => {
