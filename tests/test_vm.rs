@@ -1,26 +1,23 @@
 use std::collections::HashMap;
 use tinywrite::{
-    ir, lexer, parser,
-    parser::types,
+    InterpretationError, ir, lexer,
+    parser::{self, types},
     vm::{StackValue, VM},
 };
 
 /// Helper function to execute code and return the top stack value
-fn execute_code(input: &str) -> Result<Option<StackValue>, String> {
+fn execute_code(input: &str) -> Result<Option<StackValue>, InterpretationError> {
     let tokens = lexer::tokenize(input);
     dbg!(tokens.clone());
     let mut index = 0;
-    let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)
-        .map_err(|_| "Parse failed".to_string())?;
+    let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)?;
 
     dbg!(ast.clone());
     let mut variables = HashMap::new();
-    let commands = ir::ir(ast, &mut variables, 0);
+    let commands = ir::translate(ast, &mut variables)?;
 
     let mut vm = VM::new(commands);
-    vm.execute_program(true)
-        .map_err(|e| format!("Execution error: {:?}", e))?;
-
+    vm.execute_program(true, false)?;
     Ok(vm.stack.pop())
 }
 

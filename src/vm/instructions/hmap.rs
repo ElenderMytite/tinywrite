@@ -1,63 +1,117 @@
+use crate::vm::{ExecutionError, HeapItem, HeapValue, StackValue, TypeError, VM};
 use std::collections::HashMap;
-
-use crate::vm::{ExecutionError, HeapValue, StackValue, TypeError, VM};
 impl VM {
-    fn extract_hmap_from_heap_mut(
-        &mut self,
-        index: usize,
-    ) -> Result<&mut HashMap<StackValue, StackValue>, TypeError> {
-        let val = &mut self.heap[index];
+    fn extract_hmap_item(&mut self, index: usize) -> Result<&mut HeapItem, TypeError> {
+        let val = self.heap.get_mut(&index).unwrap();
         match val {
-            HeapValue::HMap(map) => Ok(map),
+            HeapItem {
+                value: HeapValue::HMap(_),
+                ..
+            } => Ok(val),
             _ => Err(TypeError),
         }
     }
     pub fn new_hmap(&mut self) {
-        let hmap = HashMap::new();
-        let ptr = self.heap.len();
-        self.heap.push(HeapValue::HMap(hmap));
-        self.stack.push(StackValue::Pointer(ptr));
+        self.allocate(HeapItem::new(HeapValue::HMap(HashMap::new())));
     }
     pub fn hmap_insert(&mut self) -> Result<(), ExecutionError> {
         let value = self.stack_pop()?;
         let key = self.stack_pop()?;
-        let ptr = self.stack.pop().unwrap().ptr()?;
-        let hmap = self.extract_hmap_from_heap_mut(ptr)?;
-        eprintln!("Successfully extracted hmap: {:?}", hmap.clone());
-        dbg!(key, value, ptr, hmap.clone());
-        hmap.insert(key, value);
+        let pointer = self.stack_pop()?.ptr()?;
+        {
+            let hmap_item = self.extract_hmap_item(pointer)?;
+            match hmap_item {
+                HeapItem {
+                    value: HeapValue::HMap(map),
+                    ..
+                } => map.insert(key, value),
+                _ => unreachable!(),
+            };
+        }
+        // eprintln!("Successfully extracted hmap: {:?}", hmap.clone());
+        // dbg!(key, value, ptr, hmap.clone());
+        let _ = value.ptr().inspect(|ptr| {
+            self.ref_from_heap(pointer, *ptr);
+        });
+        let _ = key.ptr().inspect(|ptr| {
+            self.ref_from_heap(pointer, *ptr);
+        });
+        self.drop_from_stack(pointer, 1);
         Ok(())
     }
     pub fn hmap_get(&mut self) -> Result<(), ExecutionError> {
         let key = self.stack_pop()?;
-        eprintln!("Successfully got key from the stack: {:?}", key);
-        let ptr = self.stack.pop().unwrap().ptr()?;
-        eprintln!("Successfully got pointer from the stack: {:?}", ptr);
+        let pointer = self.stack.pop().unwrap().ptr()?;
         let value = {
-            let hmap = self.extract_hmap_from_heap_mut(ptr)?;
-            *hmap.get(&key).unwrap_or(&StackValue::Bool(false)) // TODO: implement option type
+            let hmap_item = self.extract_hmap_item(pointer)?;
+            let hmap = match hmap_item {
+                HeapItem {
+                    value: HeapValue::HMap(map),
+                    ..
+                } => map,
+                _ => unreachable!(),
+            };
+            *hmap.get(&key).unwrap_or(&StackValue::Nil) // TODO: implement option type
         };
+        // if value was a pointer, increase refence count
+        let _ = value.ptr().inspect(|ptr| {
+            self.ref_from_stack(*ptr); // value was copied, not moved
+        });
         self.stack.push(value);
+        self.drop_from_stack(pointer, 1);
         Ok(())
     }
     pub fn hmap_contains(&mut self) -> Result<(), ExecutionError> {
         let key = self.stack_pop()?;
         let ptr = self.stack.pop().unwrap().ptr()?;
+        let hmap_item = self.extract_hmap_item(ptr)?;
         let value = {
-            let hmap = self.extract_hmap_from_heap_mut(ptr)?;
-            hmap.contains_key(&key)
+            match hmap_item {
+                HeapItem {
+                    value: HeapValue::HMap(map),
+                    ..
+                } => map.contains_key(&key),
+                _ => unreachable!(),
+            }
         };
+        let _ = key.ptr().inspect(|ptr| {
+            if value {
+                self.drop_from_stack(*ptr, 1);
+            }
+        });
         self.stack.push(StackValue::Bool(value));
         Ok(())
     }
     pub fn hmap_remove(&mut self) -> Result<(), ExecutionError> {
+        // what needs to be tracked for reference counting: key in map, key on stack, removed
         let key = self.stack_pop()?;
-        let ptr = self.stack.pop().unwrap().ptr()?;
+        let pointer = self.stack_pop()?.ptr()?;
         let value = {
-            let hmap = self.extract_hmap_from_heap_mut(ptr)?;
-            hmap.remove(&key).unwrap_or(StackValue::Bool(false)) // TODO: implement option type
+            let hmap_item = self.extract_hmap_item(pointer)?;
+            match hmap_item {
+                HeapItem {
+                    value: HeapValue::HMap(map),
+                    ..
+                } => map.remove(&key),
+                _ => unreachable!(),
+            }
         };
-        self.stack.push(value);
+        self.drop_from_stack(pointer, 1);
+        //key is already put in the hmap, so after popping it from stack amount of references decreases
+        let _ = key.ptr().inspect(|ptr| {
+            self.drop_from_stack(*ptr, 1);
+        });
+        // if value has actually been removed, drop references of the key and value
+        if value.is_some() {
+            let _ = key.ptr().inspect(|ptr| self.drop_from_heap(pointer, *ptr));
+            let _ = value
+                .unwrap()
+                .ptr()
+                .inspect(|ptr| self.drop_from_heap(pointer, *ptr));
+        }
+        // value has just been removed from hmap, but put onto stack
+        self.stack.push(value.unwrap_or(StackValue::Nil)); // TODO: implement option type
+
         Ok(())
     }
 }

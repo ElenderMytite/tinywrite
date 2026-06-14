@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::{
-    ir::{Command, iteration::ir_iteration, register_variable, value::ir_value},
+    ParseError,
+    ir::{Command, iteration::ir_vector_operation, register_variable, value::ir_value},
     parser::types::{Expression, Operation},
 };
 pub(super) fn ir_call(
@@ -11,7 +12,7 @@ pub(super) fn ir_call(
     command: Result<Command, String>,
     index: usize,
     outer: Option<Operation>,
-) {
+) -> Result<(), ParseError> {
     let func = match &expression.operation {
         Some(Operation::Call(func)) => func.clone(),
         _ => panic!("Non-call expression found in ir_call!"),
@@ -29,19 +30,19 @@ pub(super) fn ir_call(
                 variables,
                 index + commands.len(),
                 None,
-            ));
+            )?);
             match func.as_str() {
                 "byte" => commands.push(Command::Byte),
                 "char" => commands.push(Command::Char),
                 _ => unreachable!(),
             }
-            return;
+            return Ok(());
         }
         "push" | "get" | "add" | "remove" | "in" => {
             assert_eq!(expression.left.len(), 1);
             commands.push(Command::Load(register_variable(
                 variables,
-                expression.left[0].get_name().unwrap(),
+                expression.left[0].get_name()?,
             )));
         }
         "len" | "pop" => {
@@ -58,13 +59,15 @@ pub(super) fn ir_call(
                 )));
             }
             commands.push(command.clone().unwrap());
-            return;
+            return Ok(());
         }
         "hmap" => {
             commands.push(command.clone().unwrap());
-            return;
+            return Ok(());
         }
-        "vec" => commands.append(&mut ir_iteration(expression, variables, index, outer)),
+        "vec" => commands.append(&mut ir_vector_operation(
+            expression, variables, index, outer,
+        )?),
         "print" => (),
         _ => {
             panic!("Unsupported function call found!");
@@ -86,7 +89,7 @@ pub(super) fn ir_call(
             variables,
             index + commands.len(),
             None,
-        ));
+        )?);
         match command {
             Ok(Command::HInsert) => (),
             Ok(_) => {
@@ -108,4 +111,5 @@ pub(super) fn ir_call(
         Ok(Command::HInsert) => commands.push(command.clone().unwrap()),
         _ => (),
     }
+    Ok(())
 }

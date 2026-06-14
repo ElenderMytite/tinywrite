@@ -1,5 +1,5 @@
 use std::{collections::HashMap, env::args, fs::read_to_string};
-use tinywrite::{ExecutionError, InterpretationError, ir, lexer, parser, repl, vm::VM};
+use tinywrite::{InterpretationError, ir, lexer, parser, repl, vm::VM};
 fn main() -> Result<(), InterpretationError> {
     let args: Vec<String> = args().skip(1).collect();
 
@@ -26,27 +26,29 @@ fn main() -> Result<(), InterpretationError> {
 }
 
 /// Run files from command line arguments
-fn run_files(args: &[String], debug: bool) -> Result<(), ExecutionError> {
+fn run_files(args: &[String], debug: bool) -> Result<(), InterpretationError> {
     for file in args {
-        match read_to_string(format!("examples/{}", file.trim())) {
+        println!("{}", std::iter::repeat('-').take(64).collect::<String>());
+        println!("running {}", file);
+        match read_to_string(format!("{}", file.trim())) {
             Ok(text) => {
                 let tokens = lexer::tokenize(text.as_str());
                 match parser::astify(&tokens, parser::types::ParsingMode::Code, &mut 0) {
                     Ok(ast) => {
                         let vars = &mut HashMap::new();
-                        let ir: Vec<ir::Command> = ir::ir(ast, vars, 0);
-                        if debug {
-                            println!(
-                                "{}",
-                                ir.iter()
-                                    .enumerate()
-                                    .map(|(k, v)| format!("{k}: {v:?}"))
-                                    .collect::<Vec<String>>()
-                                    .join("\n")
-                            );
-                        }
+                        let ir: Vec<ir::Command> = ir::translate(ast, vars)?;
+                        // if debug {
+                        //     println!(
+                        //         "{}",
+                        //         ir.iter()
+                        //             .enumerate()
+                        //             .map(|(k, v)| format!("{k}: {v:?}"))
+                        //             .collect::<Vec<String>>()
+                        //             .join("\n")
+                        //     );
+                        // }
                         let mut vm = VM::new(ir);
-                        vm.execute_program(debug)?;
+                        vm.execute_program(debug, true)?;
                     }
                     Err(e) => {
                         eprintln!("Parse error in {}: {}", file, e);
@@ -57,6 +59,7 @@ fn run_files(args: &[String], debug: bool) -> Result<(), ExecutionError> {
                 eprintln!("Error reading file {}: {}", file, e);
             }
         }
+        println!("{}", std::iter::repeat('-').take(64).collect::<String>());
     }
     Ok(())
 }

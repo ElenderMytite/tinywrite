@@ -11,13 +11,31 @@ pub enum ParseError {
     UnexpectedEOFAfter(String),
     UnexpectedToken(String),
     UnexpectedEndOfExpression,
-    NonEmptyBuffer(Part),
-    NodeTypeError,
+    UnexpectedBlock,
+    NameError(Value),
 }
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Parse Error!")
+        let msg = match self {
+            ParseError::UnexpectedConstant(constant) => {
+                format!("Unexpected constant: {}", constant)
+            }
+            ParseError::UnexpectedEOFAfter(token) => {
+                format!("Unexpected end of file(EOF) after '{}' token", token)
+            }
+            ParseError::UnexpectedToken(token) => {
+                format!("Unexpected token: {}", token)
+            }
+            ParseError::UnexpectedEndOfExpression => {
+                format!("Unexpected end of expression")
+            }
+            ParseError::NameError(value) => {
+                format!("{value:?} is not a name")
+            }
+            ParseError::UnexpectedBlock => String::from("Unexpected block!"),
+        };
+        write!(f, "{}", msg)
     }
 }
 pub fn astify(

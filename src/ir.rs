@@ -3,6 +3,7 @@ mod call;
 mod expression;
 mod iteration;
 mod value;
+use crate::ParseError;
 use crate::parser::types::{AstNode, Comparison, Computation, Logic, Operation};
 use crate::vm::StackValue;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,7 +19,6 @@ pub enum Command {
     Del,
     Swap,
     Put(StackValue),
-    Cls,
     // comparison
     Gt,
     Geq,
@@ -49,17 +49,28 @@ pub enum Command {
     HInsert,
     HContains,
     HRemove,
+    // Group(pair) operations,
+    Group,
+    Prepend,
     // type conversions
     Byte, // convert ascii character to int
     Char, // convert int to ascii character
     // I/O
-    Print,
+    Call(usize),
 }
-pub fn ir(
+pub fn translate(
+    root: AstNode,
+    variables: &mut HashMap<String, usize>,
+) -> Result<Vec<Command>, ParseError> {
+    let mut commands = ir(root, variables, 0)?;
+    commands.push(Command::Call(0));
+    Ok(commands)
+}
+fn ir(
     root: AstNode,
     variables: &mut HashMap<String, usize>,
     /* index of the first command of this function for correct jumps*/ index: usize,
-) -> Vec<Command> {
+) -> Result<Vec<Command>, ParseError> {
     let mut commands = Vec::new();
     match root {
         AstNode::Expression(expression) => {
@@ -68,16 +79,16 @@ pub fn ir(
                 variables,
                 index + commands.len(),
                 None,
-            ));
+            )?);
         }
         AstNode::BlockCode(nodes) => {
             for node in nodes {
-                commands.append(&mut ir(node, variables, index + commands.len()));
+                commands.append(&mut ir(node, variables, index + commands.len())?);
             }
         }
     }
     //dbg!(&commands);
-    commands
+    Ok(commands)
 }
 /// Registers a variable in the environment and returns its index. If the variable already exists, it just returns the existing index.
 fn register_variable(env: &mut HashMap<String, usize>, variable: String) -> usize {
@@ -119,7 +130,7 @@ fn operation_to_command(op: Operation) -> Result<Command, String> {
             "pop" => Ok(Command::VPop),
             "get" => Ok(Command::Get),
             "len" => Ok(Command::Len),
-            "print" => Ok(Command::Print),
+            "print" => Ok(Command::Call(1)),
             "in" => Ok(Command::HContains),
             "add" => Ok(Command::HInsert),
             "remove" => Ok(Command::HRemove),

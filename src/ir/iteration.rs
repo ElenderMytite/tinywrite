@@ -4,12 +4,12 @@ use super::*;
 use crate::parser::types::{Expression, Operation, Value, VectorOp};
 use std::collections::HashMap;
 
-pub(super) fn ir_iteration(
+pub(super) fn ir_vector_operation(
     iteration: &Expression,
     variables: &mut HashMap<String, usize>,
     index: usize,
     outer: Option<Operation>,
-) -> Vec<Command> {
+) -> Result<Vec<Command>, ParseError> {
     let mut commands = Vec::new();
     match iteration.operation.clone() {
         Some(Operation::Vector(op)) => match op {
@@ -121,24 +121,24 @@ pub(super) fn ir_iteration(
                 free_variable(variables, format!("--idx-{k_idx}"));
             }
             VectorOp::Pack => {
-                parse_pack(iteration, variables, index, &mut commands);
+                parse_pack(iteration, variables, index, &mut commands)?;
             }
         },
         Some(Operation::Call(call)) => match call.as_str() {
-            "vec" => parse_pack(iteration, variables, index, &mut commands),
+            "vec" => parse_pack(iteration, variables, index, &mut commands)?,
             _ => todo!(),
         },
         Some(_) => panic!("Non-vector operation found inside iteration!"),
         None => todo!(),
     }
-    commands
+    Ok(commands)
 }
 fn parse_pack(
     iteration: &Expression,
     variables: &mut HashMap<String, usize>,
     index: usize,
     commands: &mut Vec<Command>,
-) {
+) -> Result<(), ParseError> {
     commands.push(Command::VNew);
     for node in iteration.left.iter().chain(iteration.right.iter()) {
         match node {
@@ -148,12 +148,18 @@ fn parse_pack(
                     variables,
                     index + commands.len(),
                     None,
-                ));
+                )?);
             }
             _ => {
-                commands.append(&mut ir_value(node, variables, index + commands.len(), None));
+                commands.append(&mut ir_value(
+                    node,
+                    variables,
+                    index + commands.len(),
+                    None,
+                )?);
             }
         }
         commands.push(Command::VPush);
     }
+    Ok(())
 }

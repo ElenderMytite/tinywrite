@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     execute_statement,
-    vm::{VM, print_value},
+    vm::{VM, format_value},
 };
 
 /// Run interactive REPL (Read-Eval-Print Loop)
@@ -49,19 +49,22 @@ pub fn run_repl(debug: bool) {
                     "exit" | "quit" => {
                         break;
                     }
-                    "clear" => {
-                        variables.clear();
-                        vm.env.clear();
-                        continue;
-                    }
                     "vars" | "v" => {
                         print_variables(&variables, &vm);
                         continue;
                     }
-                    "heap" => {
-                        for (i, collection) in vm.heap.iter().enumerate() {
+                    "stack" | "s" => {
+                        print_stack(&vm, None);
+                        continue;
+                    }
+                    "heap" | "h" => {
+                        for (i, collection) in vm.heap.values().enumerate() {
                             println!("{i}: {:?}", collection)
                         }
+                        continue;
+                    }
+                    "refs" => {
+                        vm.debug_refs(debug);
                         continue;
                     }
                     "" => continue,
@@ -91,15 +94,22 @@ pub fn run_repl(debug: bool) {
         }
     }
 }
+/// prints top 'num' elements from the stack. if num is none, prints whole stack
+fn print_stack(vm: &VM, num: Option<usize>) {
+    let num = num.unwrap_or(vm.stack.len());
+    for value in vm.stack.iter().rev().take(num).rev() {
+        print!("{} ", format_value(&value, vm))
+    }
+    println!()
+}
 fn print_variables(variables: &HashMap<String, usize>, vm: &VM) {
     if variables.is_empty() {
         println!("No variables defined.");
     } else {
         println!("Defined variables:");
         for (name, idx) in variables.iter() {
-            eprintln!("{:?}", vm.env);
-            println!("{}: {}", name, print_value(&vm.env[*idx], vm));
+            eprintln!("{:?}", vm.vars);
+            println!("{}: {}", name, format_value(&vm.vars[*idx], vm));
         }
     }
-    println!();
 }

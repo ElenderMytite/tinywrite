@@ -1,14 +1,17 @@
-use super::iteration::ir_iteration;
+use super::iteration::ir_vector_operation;
 use super::value::ir_value;
 use super::*;
-use crate::parser::types::{Computation, Expression, Operation, Value};
+use crate::{
+    ParseError,
+    parser::types::{Computation, Expression, Operation, Value},
+};
 use std::collections::HashMap;
 pub(super) fn ir_expression(
     expression: &Expression,
     variables: &mut HashMap<String, usize>,
     index: usize,
     outer: Option<Operation>,
-) -> Vec<Command> {
+) -> Result<Vec<Command>, ParseError> {
     let mut commands = Vec::new();
     match expression.operation.clone() {
         Some(op) => {
@@ -29,13 +32,18 @@ pub(super) fn ir_expression(
                             variables,
                             index + commands.len(),
                             None,
-                        ));
+                        )?);
                     }
                     commands.push(command.clone().unwrap());
-                    return commands;
+                    return Ok(commands);
                 }
                 Operation::Vector(_) => {
-                    commands.append(&mut ir_iteration(expression, variables, index + 1, outer));
+                    commands.append(&mut ir_vector_operation(
+                        expression,
+                        variables,
+                        index + 1,
+                        outer,
+                    )?);
                 }
                 Operation::Call(_) => {
                     let new_idx = index + commands.len();
@@ -46,7 +54,7 @@ pub(super) fn ir_expression(
                         command,
                         new_idx,
                         outer,
-                    );
+                    )?;
                 }
                 Operation::Set => {
                     assert_eq!(expression.left.len(), expression.right.len());
@@ -57,7 +65,7 @@ pub(super) fn ir_expression(
                             variables,
                             index + commands.len(),
                             None,
-                        ));
+                        )?);
                         commands.push(Command::Store(register_variable(
                             variables,
                             expression.left[i].get_name().unwrap(),
@@ -72,13 +80,13 @@ pub(super) fn ir_expression(
                             variables,
                             index + commands.len(),
                             None,
-                        ));
+                        )?);
                         commands.append(&mut ir_value(
                             &expression.right[i],
                             variables,
                             index + commands.len(),
                             None,
-                        ));
+                        )?);
                         commands.push(command.clone().unwrap());
                     }
                 }
@@ -91,7 +99,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Add);
                         }
                     }
@@ -103,7 +111,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Add);
                         }
                         commands.push(Command::Put(StackValue::Int(0)));
@@ -113,7 +121,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Add);
                         }
                         commands.push(Command::Sub);
@@ -126,7 +134,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Mul);
                         }
                     }
@@ -138,7 +146,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Mul);
                         }
                         commands.push(Command::Put(StackValue::Int(1)));
@@ -148,7 +156,7 @@ pub(super) fn ir_expression(
                                 variables,
                                 index + commands.len(),
                                 Some(op.clone()),
-                            ));
+                            )?);
                             commands.push(Command::Mul);
                         }
                         commands.push(Command::Div);
@@ -172,7 +180,7 @@ pub(super) fn ir_expression(
                             variables,
                             index + commands.len(),
                             Some(op.clone()),
-                        ));
+                        )?);
                         if idx != 0 || l == Logic::Not {
                             commands.push(command.clone().unwrap());
                         }
@@ -187,9 +195,9 @@ pub(super) fn ir_expression(
                     variables,
                     index + commands.len(),
                     None,
-                ));
+                )?);
             }
         }
     }
-    commands
+    Ok(commands)
 }

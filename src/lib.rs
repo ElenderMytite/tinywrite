@@ -44,11 +44,11 @@ pub fn execute_statement(
         .map_err(InterpretationError::Parsing)?;
 
     // Generate IR
-    let ir: Vec<ir::Command> = ir::ir(ast, variables, variables.len());
+    let ir: Vec<ir::Command> = ir::translate(ast, variables)?;
     // Execute
     vm.code = ir;
     vm.ip = 0;
-    vm.execute_program(debug)?;
+    vm.execute_program(debug, true)?;
 
     Ok(())
 }

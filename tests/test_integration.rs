@@ -12,10 +12,9 @@ fn execute_program(input: &str) -> Result<Option<StackValue>, InterpretationErro
     let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)?;
 
     let mut variables = HashMap::new();
-    let commands = ir::ir(ast, &mut variables, 0);
-
+    let commands = ir::translate(ast, &mut variables)?;
     let mut vm = VM::new(commands);
-    vm.execute_program(false)?;
+    vm.execute_program(false, false)?;
 
     Ok(vm.stack.pop())
 }

@@ -14,7 +14,7 @@ impl AstNode {
     pub fn expr(self) -> Result<Expression, ParseError> {
         match self {
             Self::Expression(expr) => Ok(*expr),
-            _ => Err(ParseError::NodeTypeError),
+            _ => Err(ParseError::UnexpectedBlock),
         }
     }
 }
@@ -33,10 +33,10 @@ pub enum Value {
     Expression(Expression),
 }
 impl Value {
-    pub(crate) fn get_name(&self) -> Result<String, ()> {
-        match &self {
+    pub(crate) fn get_name(&self) -> Result<String, ParseError> {
+        match self {
             Self::Name(s) => Ok(s.clone()),
-            _ => Err(()),
+            value => Err(ParseError::NameError(value.clone())),
         }
     }
 }

@@ -3,14 +3,10 @@
 use crate::vm::{ExecutionError, HeapValue, TypeError, VM};
 impl VM {
     fn extract_heap_value(&mut self, index: usize) -> Result<&HeapValue, TypeError> {
-        Ok(&mut self.heap[index])
+        Ok(&self.heap.get(&index).unwrap().value)
     }
-    pub fn get(&mut self, index_size: usize) -> Result<(), ExecutionError> {
-        let ptr = self
-            .stack
-            .get(self.stack.len() - 1 - index_size)
-            .unwrap()
-            .ptr()?; // collection is under the index
+    pub fn get(&mut self) -> Result<(), ExecutionError> {
+        let ptr = self.stack.get(self.stack.len() - 2).unwrap().ptr()?; // collection is under the index
         let collection = self.extract_heap_value(ptr)?;
         match collection {
             HeapValue::HMap(_) => self.hmap_get()?,

@@ -1,15 +1,16 @@
 use std::collections::HashMap;
-use tinywrite::{ir, lexer, parser, parser::types};
+use tinywrite::{
+    ParseError, ir, lexer,
+    parser::{self, types},
+};
 
 /// Helper function to parse and generate IR from input code
-fn parse_and_ir(input: &str) -> Result<Vec<ir::Command>, String> {
+fn parse_and_ir(input: &str) -> Result<Vec<ir::Command>, ParseError> {
     let tokens = lexer::tokenize(input);
     let mut index = 0;
-    let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)
-        .map_err(|_| "Parse failed".to_string())?;
-
+    let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)?;
     let mut variables = HashMap::new();
-    Ok(ir::ir(ast, &mut variables, 0))
+    ir::translate(ast, &mut variables)
 }
 
 #[test]
@@ -135,7 +136,7 @@ fn test_ir_deeply_nested_expressions() {
 }
 
 #[test]
-fn test_ir_multiple_statements() -> Result<(), String> {
+fn test_ir_multiple_statements() -> Result<(), ParseError> {
     parse_and_ir("5; 10; (+ 2 3);")?;
     Ok(())
     // Each statement should be followed by Cls (clear stack)
@@ -151,7 +152,7 @@ fn test_ir_code_block() {
 #[test]
 fn test_ir_print_command() {
     let commands = parse_and_ir("(: print 42);").unwrap();
-    assert!(commands.iter().any(|c| matches!(c, ir::Command::Print)));
+    assert!(commands.iter().any(|c| matches!(c, ir::Command::Call(1))));
 }
 
 #[test]

@@ -9,7 +9,7 @@ pub(super) fn ir_value(
     variables: &mut HashMap<String, usize>,
     index: usize,
     outer: Option<Operation>,
-) -> Vec<Command> {
+) -> Result<Vec<Command>, ParseError> {
     let mut commands = Vec::new();
     match value {
         Value::Name(s) => {
@@ -25,8 +25,8 @@ pub(super) fn ir_value(
                 variables,
                 index + commands.len(),
                 outer,
-            ));
+            )?);
         }
     }
-    commands
+    Ok(commands)
 }
