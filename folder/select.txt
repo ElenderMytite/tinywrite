@@ -1,0 +1,2 @@
+age = 19;
+:print (:select (age >= 18) ($y) (age < 18) ($n));

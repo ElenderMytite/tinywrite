@@ -1,16 +1,17 @@
 use std::collections::HashMap;
 use tinywrite::{
-    ParseError, ir, lexer,
+    InterpretationError, ir, lexer,
     parser::{self, types},
 };
 
 /// Helper function to parse and generate IR from input code
-fn parse_and_ir(input: &str) -> Result<Vec<ir::Command>, ParseError> {
+fn parse_and_ir(input: &str) -> Result<Vec<ir::Command>, InterpretationError> {
     let tokens = lexer::tokenize(input);
     let mut index = 0;
     let ast = parser::astify(&tokens, types::ParsingMode::Code, &mut index)?;
     let mut variables = HashMap::new();
-    ir::translate(ast, &mut variables)
+    let code = ir::translate(ast, &mut variables)?;
+    Ok(code)
 }
 
 #[test]
@@ -136,7 +137,7 @@ fn test_ir_deeply_nested_expressions() {
 }
 
 #[test]
-fn test_ir_multiple_statements() -> Result<(), ParseError> {
+fn test_ir_multiple_statements() -> Result<(), InterpretationError> {
     parse_and_ir("5; 10; (+ 2 3);")?;
     Ok(())
     // Each statement should be followed by Cls (clear stack)

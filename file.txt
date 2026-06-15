@@ -1,0 +1,5 @@
+x y = 5 4;
+x y = y x;
+:print x;
+map = (:hmap);
+:print map;

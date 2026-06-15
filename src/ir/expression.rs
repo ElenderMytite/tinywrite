@@ -1,21 +1,17 @@
 use super::iteration::ir_vector_operation;
 use super::value::ir_value;
 use super::*;
-use crate::{
-    ParseError,
-    parser::types::{Computation, Expression, Operation, Value},
-};
+use crate::parser::types::{Computation, Expression, Operation, Value};
 use std::collections::HashMap;
 pub(super) fn ir_expression(
     expression: &Expression,
     variables: &mut HashMap<String, usize>,
-    index: usize,
     outer: Option<Operation>,
-) -> Result<Vec<Command>, ParseError> {
-    let mut commands = Vec::new();
+    commands: &mut Commands,
+) -> Result<(), TranslationError> {
     match expression.operation.clone() {
         Some(op) => {
-            let command = operation_to_command(op.clone());
+            let command = Result::from(op.clone())?;
             // println!(
             //     "right len: {}; left len: {}; command: {:?}",
             //     expression.left.len(),
@@ -27,101 +23,53 @@ pub(super) fn ir_expression(
                     if expression.left.len() + expression.right.len() == 2 =>
                 {
                     for value in expression.left.iter().chain(expression.right.iter()) {
-                        commands.append(&mut ir_value(
-                            value,
-                            variables,
-                            index + commands.len(),
-                            None,
-                        )?);
+                        ir_value(value, variables, None, commands)?;
                     }
-                    commands.push(command.clone().unwrap());
-                    return Ok(commands);
+                    commands.push(command.clone());
+                    return Ok(());
                 }
                 Operation::Vector(_) => {
-                    commands.append(&mut ir_vector_operation(
-                        expression,
-                        variables,
-                        index + 1,
-                        outer,
-                    )?);
+                    ir_vector_operation(expression, variables, outer.clone(), commands)?;
                 }
                 Operation::Call(_) => {
-                    let new_idx = index + commands.len();
-                    call::ir_call(
-                        expression,
-                        variables,
-                        &mut commands,
-                        command,
-                        new_idx,
-                        outer,
-                    )?;
+                    call::ir_call(expression, variables, commands, outer)?;
                 }
                 Operation::Set => {
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
                         assert!(matches!(expression.left[i], Value::Name(_)));
-                        commands.append(&mut ir_value(
-                            &expression.right[i],
-                            variables,
-                            index + commands.len(),
-                            None,
-                        )?);
+                        ir_value(&expression.right[i], variables, outer.clone(), commands)?;
                         commands.push(Command::Store(register_variable(
                             variables,
-                            expression.left[i].get_name().unwrap(),
+                            (expression.left[i].get_name())?,
                         )))
                     }
                 }
                 Operation::Comparison(_) => {
                     assert_eq!(expression.left.len(), expression.right.len());
                     for i in 0..expression.left.len() {
-                        commands.append(&mut ir_value(
-                            &expression.left[i],
-                            variables,
-                            index + commands.len(),
-                            None,
-                        )?);
-                        commands.append(&mut ir_value(
-                            &expression.right[i],
-                            variables,
-                            index + commands.len(),
-                            None,
-                        )?);
-                        commands.push(command.clone().unwrap());
+                        ir_value(&expression.left[i], variables, outer.clone(), commands)?;
+                        ir_value(&expression.right[i], variables, outer.clone(), commands)?;
+                        commands.push(command);
                     }
                 }
                 Operation::Computation(computation) => match computation {
                     Computation::Add => {
                         commands.push(Command::Put(StackValue::Int(0)));
                         for value in expression.left.iter().chain(expression.right.iter()) {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Add);
                         }
                     }
                     Computation::Sub => {
                         commands.push(Command::Put(StackValue::Int(0)));
                         for value in expression.left.iter() {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Add);
                         }
                         commands.push(Command::Put(StackValue::Int(0)));
                         for value in expression.right.iter() {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Add);
                         }
                         commands.push(Command::Sub);
@@ -129,34 +77,19 @@ pub(super) fn ir_expression(
                     Computation::Mul => {
                         commands.push(Command::Put(StackValue::Int(1)));
                         for value in expression.left.iter().chain(expression.right.iter()) {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Mul);
                         }
                     }
                     Computation::Div => {
                         commands.push(Command::Put(StackValue::Int(1)));
                         for value in expression.left.iter() {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Mul);
                         }
                         commands.push(Command::Put(StackValue::Int(1)));
                         for value in expression.right.iter() {
-                            commands.append(&mut ir_value(
-                                value,
-                                variables,
-                                index + commands.len(),
-                                Some(op.clone()),
-                            )?);
+                            ir_value(value, variables, outer.clone(), commands)?;
                             commands.push(Command::Mul);
                         }
                         commands.push(Command::Div);
@@ -175,14 +108,9 @@ pub(super) fn ir_expression(
                         .chain(expression.right.iter())
                         .enumerate()
                     {
-                        commands.append(&mut ir_value(
-                            value,
-                            variables,
-                            index + commands.len(),
-                            Some(op.clone()),
-                        )?);
+                        ir_value(value, variables, Some(op.clone()), commands)?;
                         if idx != 0 || l == Logic::Not {
-                            commands.push(command.clone().unwrap());
+                            commands.push(command);
                         }
                     }
                 }
@@ -190,14 +118,9 @@ pub(super) fn ir_expression(
         }
         None => {
             for i in 0..expression.left.len() {
-                commands.append(&mut ir_value(
-                    &expression.left[i],
-                    variables,
-                    index + commands.len(),
-                    None,
-                )?);
+                ir_value(&expression.left[i], variables, None, commands)?;
             }
         }
     }
-    Ok(commands)
+    Ok(())
 }

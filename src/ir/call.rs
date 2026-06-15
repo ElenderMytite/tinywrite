@@ -1,18 +1,23 @@
 use std::collections::HashMap;
 
 use crate::{
-    ParseError,
-    ir::{Command, iteration::ir_vector_operation, register_variable, value::ir_value},
+    ir::{
+        Command, TranslationError, iteration::ir_vector_operation, register_variable,
+        value::ir_value,
+    },
     parser::types::{Expression, Operation},
 };
 pub(super) fn ir_call(
     expression: &Expression,
     variables: &mut HashMap<String, usize>,
     commands: &mut Vec<Command>,
-    command: Result<Command, String>,
-    index: usize,
     outer: Option<Operation>,
-) -> Result<(), ParseError> {
+) -> Result<(), TranslationError> {
+    let command_ = outer.clone().map(|op| Result::from(op.clone()));
+    let command = match command_ {
+        Some(result) => Some(result?),
+        None => None,
+    };
     let func = match &expression.operation {
         Some(Operation::Call(func)) => func.clone(),
         _ => panic!("Non-call expression found in ir_call!"),
@@ -25,12 +30,7 @@ pub(super) fn ir_call(
             } else {
                 &expression.right[0]
             };
-            commands.append(&mut ir_value(
-                value,
-                variables,
-                index + commands.len(),
-                None,
-            )?);
+            ir_value(value, variables, None, commands)?;
             match func.as_str() {
                 "byte" => commands.push(Command::Byte),
                 "char" => commands.push(Command::Char),
@@ -65,9 +65,7 @@ pub(super) fn ir_call(
             commands.push(command.clone().unwrap());
             return Ok(());
         }
-        "vec" => commands.append(&mut ir_vector_operation(
-            expression, variables, index, outer,
-        )?),
+        "vec" => ir_vector_operation(expression, variables, outer.clone(), commands)?,
         "print" => (),
         _ => {
             panic!("Unsupported function call found!");
@@ -81,18 +79,13 @@ pub(super) fn ir_call(
     {
         // special prepraration for commands that consume the pointer to the vector (get command),
         match command {
-            Ok(Command::Get) => commands.push(Command::Dup),
+            Some(Command::Get) => commands.push(Command::Dup),
             _ => (),
         }
-        commands.append(&mut ir_value(
-            value,
-            variables,
-            index + commands.len(),
-            None,
-        )?);
+        ir_value(value, variables, outer.clone(), commands)?;
         match command {
-            Ok(Command::HInsert) => (),
-            Ok(_) => {
+            Some(Command::HInsert) => (),
+            Some(_) => {
                 commands.push(command.clone().unwrap());
             }
             _ => panic!(
@@ -102,13 +95,13 @@ pub(super) fn ir_call(
         }
         // special post-preparation for commands that put values on top of the stack (get command),
         match command {
-            Ok(Command::Get) => commands.push(Command::Swap),
+            Some(Command::Get) => commands.push(Command::Swap),
             _ => (),
         }
     }
     match command {
-        Ok(Command::Get) => commands.push(Command::Del),
-        Ok(Command::HInsert) => commands.push(command.clone().unwrap()),
+        Some(Command::Get) => commands.push(Command::Del),
+        Some(Command::HInsert) => commands.push(command.clone().unwrap()),
         _ => (),
     }
     Ok(())

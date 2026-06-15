@@ -33,10 +33,10 @@ pub enum Value {
     Expression(Expression),
 }
 impl Value {
-    pub(crate) fn get_name(&self) -> Result<String, ParseError> {
+    pub(crate) fn get_name(&self) -> Result<String, Value> {
         match self {
             Self::Name(s) => Ok(s.clone()),
-            value => Err(ParseError::NameError(value.clone())),
+            value => Err(value.clone()),
         }
     }
 }

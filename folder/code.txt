@@ -1,0 +1,4 @@
+foo = 7;
+bat = 6;
+:print foo bat $line;
+:print 8;

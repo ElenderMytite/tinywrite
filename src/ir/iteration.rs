@@ -7,10 +7,9 @@ use std::collections::HashMap;
 pub(super) fn ir_vector_operation(
     iteration: &Expression,
     variables: &mut HashMap<String, usize>,
-    index: usize,
     outer: Option<Operation>,
-) -> Result<Vec<Command>, ParseError> {
-    let mut commands = Vec::new();
+    commands: &mut Commands,
+) -> Result<(), TranslationError> {
     match iteration.operation.clone() {
         Some(Operation::Vector(op)) => match op {
             VectorOp::Unpack => {
@@ -54,7 +53,6 @@ pub(super) fn ir_vector_operation(
                     commands.push(Command::Store(idx));
                     commands.push(Command::Load(vector));
                     commands.push(Command::Store(vec_ptr));
-                    let label = index + commands.len();
                     // put neultral element to the stack before the first iteration (0 for addition, 1 for multiplication);
                     // Inverse operations first apply normal opertation on both sides and then apply the inverse operation to the current value on the stack, so we need to put the neutral element before the first iteration
                     match outer {
@@ -67,6 +65,9 @@ pub(super) fn ir_vector_operation(
                         _ => (),
                     }
                     // for loop
+                    let label = commands.len();
+                    commands.push(Command::Load(vec_ptr));
+                    commands.push(Command::Load(idx));
                     match outer {
                         Some(Operation::Comparison(_)) => {
                             todo!("vector unpacking inside comparison not supported")
@@ -74,15 +75,11 @@ pub(super) fn ir_vector_operation(
                         Some(Operation::Computation(computation)) => match computation {
                             Computation::Add | Computation::Sub => {
                                 // get value at idx and add it to the current value on the stack
-                                commands.push(Command::Load(vec_ptr));
-                                commands.push(Command::Load(idx));
                                 commands.push(Command::Get);
                                 commands.push(Command::Add);
                             }
                             Computation::Mul | Computation::Div => {
                                 // get value at idx and multiply it to the current value on the stack
-                                commands.push(Command::Load(vec_ptr));
-                                commands.push(Command::Load(idx));
                                 commands.push(Command::Get);
                                 commands.push(Command::Mul);
                             }
@@ -92,16 +89,11 @@ pub(super) fn ir_vector_operation(
                             panic!("Cannot use vector unpacking inside assignment!")
                         }
                         Some(Operation::Logic(logic_op)) => {
-                            commands.push(Command::Load(vec_ptr));
-                            commands.push(Command::Load(idx));
                             commands.push(Command::Get);
-                            commands
-                                .push(operation_to_command(Operation::Logic(logic_op)).unwrap());
+                            commands.push(Result::from(Operation::Logic(logic_op))?);
                         }
                         None => {
                             // just push the value at idx to the stack
-                            commands.push(Command::Load(vec_ptr));
-                            commands.push(Command::Load(idx));
                             commands.push(Command::Get);
                         }
                         _ => panic!("Unsupported outer operation for vector unpacking!"),
@@ -121,42 +113,31 @@ pub(super) fn ir_vector_operation(
                 free_variable(variables, format!("--idx-{k_idx}"));
             }
             VectorOp::Pack => {
-                parse_pack(iteration, variables, index, &mut commands)?;
+                parse_pack(iteration, variables, commands)?;
             }
         },
         Some(Operation::Call(call)) => match call.as_str() {
-            "vec" => parse_pack(iteration, variables, index, &mut commands)?,
+            "vec" => parse_pack(iteration, variables, commands)?,
             _ => todo!(),
         },
         Some(_) => panic!("Non-vector operation found inside iteration!"),
         None => todo!(),
     }
-    Ok(commands)
+    Ok(())
 }
 fn parse_pack(
     iteration: &Expression,
     variables: &mut HashMap<String, usize>,
-    index: usize,
-    commands: &mut Vec<Command>,
-) -> Result<(), ParseError> {
+    commands: &mut Commands,
+) -> Result<(), TranslationError> {
     commands.push(Command::VNew);
     for node in iteration.left.iter().chain(iteration.right.iter()) {
         match node {
             Value::Expression(expr) => {
-                commands.append(&mut ir_expression(
-                    expr,
-                    variables,
-                    index + commands.len(),
-                    None,
-                )?);
+                ir_expression(expr, variables, None, commands)?;
             }
             _ => {
-                commands.append(&mut ir_value(
-                    node,
-                    variables,
-                    index + commands.len(),
-                    None,
-                )?);
+                ir_value(node, variables, None, commands)?;
             }
         }
         commands.push(Command::VPush);

@@ -6,8 +6,14 @@ pub mod vm;
 
 use std::collections::HashMap;
 
+pub use ir::TranslationError;
 pub use parser::ParseError;
 pub use vm::ExecutionError;
+impl From<TranslationError> for InterpretationError {
+    fn from(value: TranslationError) -> Self {
+        Self::Translating(value)
+    }
+}
 
 impl From<ParseError> for InterpretationError {
     fn from(value: ParseError) -> Self {
@@ -24,6 +30,7 @@ impl From<ExecutionError> for InterpretationError {
 #[derive(Debug)]
 pub enum InterpretationError {
     Parsing(ParseError),
+    Translating(TranslationError),
     Execution(ExecutionError),
 }
 /// Execute a single statement (used by REPL and main)
