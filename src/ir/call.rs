@@ -13,15 +13,11 @@ pub(super) fn ir_call(
     commands: &mut Vec<Command>,
     outer: Option<Operation>,
 ) -> Result<(), TranslationError> {
-    let command_ = outer.clone().map(|op| Result::from(op.clone()));
-    let command = match command_ {
-        Some(result) => Some(result?),
-        None => None,
-    };
-    let func = match &expression.operation {
-        Some(Operation::Call(func)) => func.clone(),
+    let (func, command) = match &expression.operation {
+        Some(Operation::Call(func)) => (func.clone(), Result::from(Operation::Call(func.clone()))?),
         _ => panic!("Non-call expression found in ir_call!"),
     };
+
     match func.as_str() {
         "byte" | "char" => {
             assert_eq!(expression.left.len() + expression.right.len(), 1);
@@ -58,11 +54,11 @@ pub(super) fn ir_call(
                     expression.right[0].get_name().unwrap(),
                 )));
             }
-            commands.push(command.clone().unwrap());
+            commands.push(command);
             return Ok(());
         }
         "hmap" => {
-            commands.push(command.clone().unwrap());
+            commands.push(command);
             return Ok(());
         }
         "vec" => ir_vector_operation(expression, variables, outer.clone(), commands)?,
@@ -79,29 +75,25 @@ pub(super) fn ir_call(
     {
         // special prepraration for commands that consume the pointer to the vector (get command),
         match command {
-            Some(Command::Get) => commands.push(Command::Dup),
+            Command::Get => commands.push(Command::Dup),
             _ => (),
         }
         ir_value(value, variables, outer.clone(), commands)?;
         match command {
-            Some(Command::HInsert) => (),
-            Some(_) => {
-                commands.push(command.clone().unwrap());
+            Command::HInsert => (),
+            _ => {
+                commands.push(command);
             }
-            _ => panic!(
-                "Unsupported function call found! Command {:?} not supported;",
-                command
-            ),
         }
         // special post-preparation for commands that put values on top of the stack (get command),
         match command {
-            Some(Command::Get) => commands.push(Command::Swap),
+            Command::Get => commands.push(Command::Swap),
             _ => (),
         }
     }
     match command {
-        Some(Command::Get) => commands.push(Command::Del),
-        Some(Command::HInsert) => commands.push(command.clone().unwrap()),
+        Command::Get => commands.push(Command::Del),
+        Command::HInsert => commands.push(command),
         _ => (),
     }
     Ok(())

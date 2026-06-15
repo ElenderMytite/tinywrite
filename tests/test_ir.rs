@@ -152,7 +152,8 @@ fn test_ir_code_block() {
 
 #[test]
 fn test_ir_print_command() {
-    let commands = parse_and_ir("(: print 42);").unwrap();
+    let commands = parse_and_ir("(: print 42 32);").unwrap();
+    dbg!(&commands);
     assert!(commands.iter().any(|c| matches!(c, ir::Command::Call(1))));
 }
 
