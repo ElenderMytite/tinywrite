@@ -85,7 +85,7 @@ impl VM {
         if clear_stack {
             self.clear_stack(debug);
         }
-        Ok(exit)
+        Ok(exit - 1)
         // garbage collection
     }
     /// reads command at instruction pointer (ip), and calls corresponding function, then increases instruction pointer by one

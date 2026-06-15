@@ -145,10 +145,7 @@ impl From<Operation> for Result<Command, TranslationError> {
                 "pop" => Command::VPop,
                 "get" => Command::Get,
                 "len" => Command::Len,
-                "print" => {
-                    dbg!("converting to print command");
-                    Command::Call(1)
-                }
+                "print" => Command::Call(1),
                 "in" => Command::HContains,
                 "add" => Command::HInsert,
                 "remove" => Command::HRemove,
