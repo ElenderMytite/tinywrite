@@ -16,6 +16,7 @@ pub enum ExecutionError {
     StackUnderflow,
 }
 pub struct VM {
+    /// instruction pointer
     pub ip: usize,
     flush: bool,
     pub code: Vec<Command>,
@@ -59,7 +60,7 @@ impl VM {
             heap: HashMap::new(),
         }
     }
-    /// prints debugging information before executing each command
+    /// prints debugging information before executing each command if called with debug = true
     pub fn execute_program(
         &mut self,
         debug: bool,
@@ -87,53 +88,52 @@ impl VM {
         Ok(exit)
         // garbage collection
     }
-    /// reads command at instruction pointer ip, and calls corresponding function, then increases instruction pointer by one
+    /// reads command at instruction pointer (ip), and calls corresponding function, then increases instruction pointer by one
     fn execute_command(&mut self, exit: &mut usize) -> Result<(), ExecutionError> {
         let command = self.code[self.ip];
         self.ip += 1;
         match command {
-            Command::VNew => self.new_vec(),
-            Command::Group => return self.group(),
-            Command::Prepend => return self.prepend(),
-            Command::HNew => self.new_hmap(),
-            Command::Add => return self.add(),
-            Command::Sub => return self.sub(),
-            Command::Mul => return self.mul(),
-            Command::Div => return self.div(),
-            Command::Mod => return self.modd(),
-            Command::Byte => return self.byte(),
-            Command::Char => return self.char(),
-            Command::Dup => return self.dup(),
-            Command::Swap => return self.swap(),
-            Command::Del => return self.del(),
-            Command::Put(value) => self.put(value),
+            Command::VNew => Ok(self.new_vec()),
+            Command::Group => self.group(),
+            Command::Prepend => self.prepend(),
+            Command::HNew => Ok(self.new_hmap()),
+            Command::Add => self.add(),
+            Command::Sub => self.sub(),
+            Command::Mul => self.mul(),
+            Command::Div => self.div(),
+            Command::Mod => self.modd(),
+            Command::Byte => self.byte(),
+            Command::Char => self.char(),
+            Command::Dup => self.dup(),
+            Command::Swap => self.swap(),
+            Command::Del => self.del(),
+            Command::Put(value) => Ok(self.put(value)),
             Command::Call(code) => match code {
-                1 => return self.dump(),
-                x => *exit = x + 1,
+                1 => self.dump(),
+                x => Ok(*exit = x + 1),
             },
-            Command::Eq => return self.eq(),
-            Command::Neq => return self.neq(),
-            Command::Geq => return self.geq(),
-            Command::Leq => return self.leq(),
-            Command::Gt => return self.gt(),
-            Command::Ls => return self.ls(),
-            Command::Not => return self.not(),
-            Command::And => return self.and(),
-            Command::Or => return self.or(),
-            Command::Xor => return self.xor(),
-            Command::Nor => return self.nor(),
-            Command::Nand => return self.nand(),
-            Command::Load(addr) => self.load(addr),
-            Command::Store(addr) => return self.store(addr),
-            Command::Jmp(addr) => return self.jump(addr),
-            Command::Get => return self.get(),
-            Command::HContains => return self.hmap_contains(),
-            Command::Len => return self.len(),
-            Command::VPop => return self.vec_pop(),
-            Command::HRemove => return self.hmap_remove(),
-            Command::VPush => return self.vec_push(),
-            Command::HInsert => return self.hmap_insert(),
+            Command::Eq => self.eq(),
+            Command::Neq => self.neq(),
+            Command::Geq => self.geq(),
+            Command::Leq => self.leq(),
+            Command::Gt => self.gt(),
+            Command::Ls => self.ls(),
+            Command::Not => self.not(),
+            Command::And => self.and(),
+            Command::Or => self.or(),
+            Command::Xor => self.xor(),
+            Command::Nor => self.nor(),
+            Command::Nand => self.nand(),
+            Command::Load(addr) => Ok(self.load(addr)),
+            Command::Store(addr) => self.store(addr),
+            Command::Jmp(addr) => self.jump(addr),
+            Command::Get => self.get(),
+            Command::HContains => self.hmap_contains(),
+            Command::Len => self.len(),
+            Command::VPop => self.vec_pop(),
+            Command::HRemove => self.hmap_remove(),
+            Command::VPush => self.vec_push(),
+            Command::HInsert => self.hmap_insert(),
         }
-        Ok(())
     }
 }
