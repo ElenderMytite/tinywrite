@@ -1,7 +1,0 @@
-╔════════════════════════════════════════╗
-║     TinyWrite Interactive REPL         ║
-╚════════════════════════════════════════╝
-
-Type 'vars', to display variables, 'clear' to clear variables, 'exit' or 'quit' to exit.
-
->> 
