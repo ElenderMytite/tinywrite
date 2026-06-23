@@ -22,7 +22,7 @@ pub fn run_repl(debug: bool) {
     let mut variables: HashMap<String, usize> = HashMap::new();
     let mut line_buffer = String::new();
     let mut statement_buffer = String::new();
-    let mut vm = VM::new(Vec::new());
+    let mut vm: VM = VM::empty();
     loop {
         // Show prompt
         if statement_buffer.is_empty() {
@@ -55,16 +55,6 @@ pub fn run_repl(debug: bool) {
                     }
                     "stack" | "s" => {
                         print_stack(&vm, None);
-                        continue;
-                    }
-                    "heap" | "h" => {
-                        for (i, collection) in vm.heap.values().enumerate() {
-                            println!("{i}: {:?}", collection)
-                        }
-                        continue;
-                    }
-                    "refs" => {
-                        vm.debug_refs(debug);
                         continue;
                     }
                     "" => continue,
@@ -103,7 +93,7 @@ pub fn run_repl(debug: bool) {
 fn print_stack(vm: &VM, num: Option<usize>) {
     let num = num.unwrap_or(vm.stack.len());
     for value in vm.stack.iter().rev().take(num).rev() {
-        print!("{} ", format_value(&value, vm))
+        print!("{} ", format_value(value.primitive().unwrap()))
     }
     println!()
 }
@@ -114,7 +104,11 @@ fn print_variables(variables: &HashMap<String, usize>, vm: &VM) {
         println!("Defined variables:");
         for (name, idx) in variables.iter() {
             eprintln!("{:?}", vm.vars);
-            println!("{}: {}", name, format_value(&vm.vars[*idx], vm));
+            println!(
+                "{}: {}",
+                name,
+                format_value(&vm.vars[*idx].primitive().unwrap())
+            );
         }
     }
 }

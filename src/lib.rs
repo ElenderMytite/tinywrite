@@ -57,13 +57,12 @@ pub fn execute_statement(
         .map_err(InterpretationError::Parsing)?;
 
     // Generate IR
-    let ir: Vec<ir::Command> = ir::translate(ast, variables)?;
+    let (ir, strings) = ir::translate(ast, variables)?;
     if debug {
         dbg!(&ir);
     }
     // Execute
-    vm.code = ir;
-    vm.ip = 0;
+    vm.set_environment(ir, strings);
     vm.execute_program(debug, true)?;
 
     Ok(())

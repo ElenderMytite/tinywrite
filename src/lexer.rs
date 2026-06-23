@@ -1,4 +1,4 @@
-const SPLITTERS: [char; 11] = ['$', ':', ';', '\"', '\'', '(', '{', '[', ']', '}', ')'];
+const SPLITTERS: [char; 10] = ['$', ':', ';', '\'', '(', '{', '[', ']', '}', ')'];
 const FINALS: [&'static str; 19] = [
     "?|", "!|", "++", "**", "||", "&&", "^^", "...", "#.", "@.", "|\\", "/|", "~>", "->", "<-",
     "</", "<_", "_>", "\\>",
@@ -127,6 +127,7 @@ pub fn tokenize(text: &Vec<u8>) -> Result<Vec<Token>, SyntaxError> {
             (WritingMode::Fresh, sep) if SPLITTERS.contains(&sep) => {
                 tokens.push(Token::from_symbols(&sep.to_string())?);
             }
+            (WritingMode::Fresh, '\"') => mode = WritingMode::String,
             (WritingMode::Comment, '\n') => mode = WritingMode::Fresh,
             (WritingMode::Comment, _) => (),
             (WritingMode::Fresh, '\n' | '\t' | ' ') => (),
@@ -149,8 +150,8 @@ pub fn tokenize(text: &Vec<u8>) -> Result<Vec<Token>, SyntaxError> {
             (WritingMode::Special, sep) if SPLITTERS.contains(&sep) => {
                 tokens.push(Token::from_symbols(word.as_str())?); // because not in start mode, word isn't empty
                 word.clear();
-                tokens.push(Token::from_symbols(&sep.to_string())?);
                 mode = WritingMode::Fresh;
+                continue;
             }
             (WritingMode::Special | WritingMode::Fresh, symbol)
                 if symbol.is_ascii_punctuation() =>
@@ -169,7 +170,6 @@ pub fn tokenize(text: &Vec<u8>) -> Result<Vec<Token>, SyntaxError> {
                 mode = WritingMode::Fresh;
                 continue;
             }
-            (WritingMode::Fresh, '\"') => mode = WritingMode::String,
             (WritingMode::String, '\\') => mode = WritingMode::Backslash,
             (WritingMode::String, '\"') => {
                 tokens.push(Token::String(word));

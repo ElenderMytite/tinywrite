@@ -2,7 +2,7 @@ pub mod types;
 use std::fmt::Display;
 
 use types::{
-    AstNode, Comparison, Computation, Expression, Keyword, Logic, Operation, ParsingMode, Part,
+    AstNode, Comparison, Computation, Constant, Expression, Logic, Operation, ParsingMode, Part,
     Value, VectorOp,
 };
 
@@ -48,7 +48,7 @@ pub fn astify(
     let mut buffer: Vec<Part> = Vec::new();
     let mut nodes: Vec<AstNode> = Vec::new();
     while *index < tokens.len() {
-        match &tokens[*index] {
+        match tokens[*index].clone() {
             Token::RoundOpen => {
                 *index += 1;
                 buffer.push(Part::Value(Value::Expression(
@@ -81,7 +81,6 @@ pub fn astify(
                     buffer.push(expr.clone());
                 }
                 ParsingMode::Code => {
-                    println!("End of statement in block code");
                     if !buffer.is_empty() {
                         let node = parse_expression(&buffer);
                         //dbg!(&node);
@@ -127,19 +126,21 @@ pub fn astify(
             Token::Slice => buffer.push(Part::Operation(Operation::Vector(VectorOp::Unpack))),
 
             Token::Int(x) => {
-                buffer.push(Part::Value(Value::Number(*x)));
+                buffer.push(Part::Value(Value::Number(x)));
             }
             Token::Name(name) => {
-                buffer.push(Part::Value(Value::Name(name.clone())));
+                buffer.push(Part::Value(Value::Name(name)));
             }
+            Token::String(s) => buffer.push(Part::Value(Value::Literal(s))),
             Token::Constant => {
                 *index += 1;
                 if let Some(Token::Name(keyword)) = tokens.get(*index) {
                     match keyword.as_str() {
-                        "true" => buffer.push(Part::Keyword(Keyword::True)),
-                        "false" => buffer.push(Part::Keyword(Keyword::False)),
-                        "tab" => buffer.push(Part::Keyword(Keyword::Tab)),
-                        "line" => buffer.push(Part::Keyword(Keyword::Newline)),
+                        "true" => buffer.push(Part::Constant(Constant::True)),
+                        "false" => buffer.push(Part::Constant(Constant::False)),
+                        "tab" => buffer.push(Part::Constant(Constant::Tab)),
+                        "line" => buffer.push(Part::Constant(Constant::Newline)),
+                        "space" => buffer.push(Part::Constant(Constant::Space)),
                         // only works for ascii
                         c if keyword.len() == 1 => {
                             buffer.push(Part::Value(Value::Char(c.chars().nth(0).unwrap())))
@@ -163,7 +164,6 @@ pub fn astify(
 }
 fn parse_expression(buffer: &Vec<Part>) -> Expression {
     let mut idx = 0;
-    println!("parsing expression from: {:?}", buffer);
     let mut left: Vec<Part> = Vec::new();
     let mut right: Vec<Part> = Vec::new();
     let mut operation: Option<Operation> = None;
@@ -195,15 +195,13 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                     panic!("Unexpected end of tokens after call operator!");
                 }
             }
-            Part::Keyword(word) => match word {
-                Keyword::True | Keyword::False | Keyword::Newline | Keyword::Tab => {
-                    if operation.is_none() {
-                        left.push(buffer[idx].clone());
-                    } else {
-                        right.push(buffer[idx].clone());
-                    }
+            Part::Constant(_) => {
+                if operation.is_none() {
+                    left.push(buffer[idx].clone());
+                } else {
+                    right.push(buffer[idx].clone());
                 }
-            },
+            }
         }
         idx += 1;
     }
@@ -220,11 +218,12 @@ fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
         .iter()
         .map(|part| match part.clone() {
             Part::Value(x) => x,
-            Part::Keyword(b) => match b {
-                Keyword::True => Value::Bool(true),
-                Keyword::False => Value::Bool(false),
-                Keyword::Tab => Value::Char('\t'),
-                Keyword::Newline => Value::Char('\n'),
+            Part::Constant(b) => match b {
+                Constant::True => Value::Bool(true),
+                Constant::False => Value::Bool(false),
+                Constant::Tab => Value::Char('\t'),
+                Constant::Newline => Value::Char('\n'),
+                Constant::Space => Value::Char(' '),
             },
             _ => panic!("can't parse unary expression"),
         })

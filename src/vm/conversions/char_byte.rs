@@ -1,13 +1,13 @@
-use crate::vm::{ExecutionError, StackValue, Type, VM};
+use crate::vm::{ExecutionError, PrimitiveValue, Type, VM};
 impl VM {
     pub fn byte(&mut self) -> Result<(), ExecutionError> {
         let c = self.stack.pop().unwrap().char().unwrap();
-        self.stack.push(StackValue::Int(c as isize));
+        self.put(PrimitiveValue::Int(c as isize));
         Ok(())
     }
     pub fn char(&mut self) -> Result<(), ExecutionError> {
         let i = self.stack.pop().unwrap().int()?;
-        self.stack.push(StackValue::Char(checked_char(i as u32)?));
+        self.put(PrimitiveValue::Char(checked_char(i as u32)?));
         Ok(())
     }
 }

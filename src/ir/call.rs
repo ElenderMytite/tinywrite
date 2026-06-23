@@ -11,6 +11,7 @@ pub(super) fn ir_call(
     expression: &Expression,
     variables: &mut HashMap<String, usize>,
     commands: &mut Vec<Command>,
+    strings: &mut Vec<String>,
     outer: Option<Operation>,
 ) -> Result<(), TranslationError> {
     let (func, command) = match &expression.operation {
@@ -28,7 +29,7 @@ pub(super) fn ir_call(
             } else {
                 &expression.right[0]
             };
-            ir_value(value, variables, None, commands)?;
+            ir_value(value, variables, None, commands, strings)?;
             match func.as_str() {
                 "byte" => commands.push(Command::Byte),
                 "char" => commands.push(Command::Char),
@@ -63,7 +64,7 @@ pub(super) fn ir_call(
             commands.push(command);
             return Ok(());
         }
-        "vec" => ir_vector_operation(expression, variables, outer.clone(), commands)?,
+        "vec" => ir_vector_operation(expression, variables, outer.clone(), commands, strings)?,
         "print" => (),
         _ => {
             panic!("Unsupported function call found!");
@@ -80,7 +81,7 @@ pub(super) fn ir_call(
             Command::Get => commands.push(Command::Dup),
             _ => (),
         }
-        ir_value(value, variables, outer.clone(), commands)?;
+        ir_value(value, variables, outer.clone(), commands, stringss)?;
         match command {
             Command::HInsert => (),
             _ => {

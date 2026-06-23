@@ -1,7 +1,7 @@
 use crate::ir::Command;
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
+mod conversions;
 mod instructions;
-mod reference_counting;
 mod types;
 pub use types::*;
 impl From<TypeError> for ExecutionError {
@@ -14,23 +14,23 @@ pub enum ExecutionError {
     TypeMismatch(TypeError),
     ConversionError { from: Type, to: Type },
     StackUnderflow,
+    UnexpectedPrimitiveValue(PrimitiveValue),
+    NonPointerValue,
+    NonPrimitiveValue,
+    NonHashableValue,
+    PopFromEmpty,
+    NonExistingKey,
 }
 pub struct VM {
     /// instruction pointer
     pub ip: usize,
+    strings: Vec<String>,
     flush: bool,
     pub code: Vec<Command>,
     /// storage for temporary calculations
     pub stack: Vec<StackValue>,
     /// storage for variables
     pub vars: Vec<StackValue>,
-    /// how many references to heap are in stack and vars,
-    pub(self) vars_refs: HashMap<usize, usize>,
-    pub(self) stack_refs: HashMap<usize, usize>,
-    /// storage for large data (vector, hash map or a string)
-    next_addr: usize,
-    /// When the value moves from stack to heap, do not decrease amount of pointers to a value,
-    pub heap: HashMap<usize, HeapItem>,
 }
 impl VM {
     pub fn stack_pop(&mut self) -> Result<StackValue, ExecutionError> {
@@ -40,24 +40,37 @@ impl VM {
             None => Err(ExecutionError::StackUnderflow),
         }
     }
-    pub fn stack_top(&mut self) -> Result<StackValue, ExecutionError> {
+    pub fn stack_top(&mut self) -> Result<&StackValue, ExecutionError> {
         let value = self.stack.last();
         match value {
-            Some(x) => Ok(*x),
+            Some(x) => Ok(x),
             None => Err(ExecutionError::StackUnderflow),
         }
     }
-    pub fn new(code: Vec<Command>) -> Self {
+    /// create
+    pub fn empty() -> Self {
+        Self {
+            ip: 0,
+            strings: vec![],
+            flush: false,
+            code: vec![],
+            stack: vec![],
+            vars: vec![],
+        }
+    }
+    pub fn set_environment(&mut self, code: Vec<Command>, strings: Vec<String>) {
+        self.code = code;
+        self.ip = 0;
+        self.strings = strings;
+    }
+    pub fn new(code: Vec<Command>, strings: Vec<String>) -> Self {
         Self {
             ip: 0,
             flush: false,
+            strings,
             code: code,
             vars: Vec::new(),
-            vars_refs: HashMap::new(),
             stack: Vec::new(),
-            stack_refs: HashMap::new(),
-            next_addr: 0,
-            heap: HashMap::new(),
         }
     }
     /// prints debugging information before executing each command if called with debug = true
@@ -70,11 +83,10 @@ impl VM {
         while self.ip < self.code.len() && exit == 0 {
             if debug {
                 eprintln!(
-                    "{}: {:?};\n stack: {:?};\n refs{:?}",
+                    "{}: {:?};\n stack: {:?};",
                     self.ip,
                     self.code[self.ip].clone(),
                     self.stack.clone(),
-                    self.debug_refs(debug)
                 )
             }
             self.execute_command(&mut exit)?;
@@ -93,10 +105,8 @@ impl VM {
         let command = self.code[self.ip];
         self.ip += 1;
         match command {
-            Command::VNew => Ok(self.new_vec()),
-            Command::Group => self.group(),
-            Command::Prepend => self.prepend(),
-            Command::HNew => Ok(self.new_hmap()),
+            Command::VNew => Ok(self.vec_new()),
+            Command::HNew => Ok(self.hmap_new()),
             Command::Add => self.add(),
             Command::Sub => self.sub(),
             Command::Mul => self.mul(),
@@ -134,6 +144,7 @@ impl VM {
             Command::HRemove => self.hmap_remove(),
             Command::VPush => self.vec_push(),
             Command::HInsert => self.hmap_insert(),
+            Command::PutS(id) => Ok(self.put_str(id)),
         }
     }
 }

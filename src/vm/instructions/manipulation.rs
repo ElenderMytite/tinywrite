@@ -1,12 +1,9 @@
 use std::io::{Write, stdout};
 
-use crate::vm::{ExecutionError, StackValue, VM, format_value};
+use crate::vm::{ExecutionError, PrimitiveValue, StackValue, VM, format_value};
 impl VM {
     pub fn dup(&mut self) -> Result<(), ExecutionError> {
-        let a = self.stack_top()?;
-        if let Ok(ptr) = a.ptr() {
-            self.ref_from_stack(ptr);
-        }
+        let a = self.stack_top()?.clone();
         self.stack.push(a);
         Ok(())
     }
@@ -18,10 +15,7 @@ impl VM {
         Ok(())
     }
     pub fn del(&mut self) -> Result<(), ExecutionError> {
-        let _ = self.stack_pop()?.ptr().inspect(|ptr| {
-            self.drop_from_stack(*ptr, 1);
-        });
-        Ok(())
+        self.stack_pop().map(|_| ())
     }
     pub fn clear_stack(&mut self, debug: bool) {
         if self.flush {
@@ -31,69 +25,41 @@ impl VM {
         if debug {
             eprintln!("clearing stack");
         }
-        for (reference, count) in self.stack_refs.clone().iter() {
-            if debug {
-                eprintln!(
-                    "reducing {count} out of {} referecing of {reference}",
-                    self.heap.get(&reference).unwrap().refs
-                );
-            }
-            self.drop_from_stack(*reference, *count);
-            self.stack_refs.remove(reference);
-        }
         self.stack.clear();
-    }
-    pub fn debug_refs(&self, debug: bool) {
-        if debug {
-            eprintln!(
-                "stack refs: {:?}; vars refs: {:?}, heap:  {:#?}",
-                self.stack_refs.clone(),
-                self.vars_refs.clone(),
-                self.heap.clone()
-            );
-        } else {
-            eprintln!("debug funciton called in normal mode");
-        }
     }
     pub fn dump(&mut self) -> Result<(), ExecutionError> {
         let value = self.stack_pop()?;
-        if let StackValue::Char('\n') = value {
+        if let StackValue::StringView(s) = value {
+            print!("{string}", string = s.borrow());
+            stdout().flush().unwrap();
+            return Ok(());
+        }
+        let primitive = value.primitive().copied();
+        if let Some(PrimitiveValue::Char('\n')) = primitive {
             println!();
             self.flush = false;
-        } else {
-            print!("{}", format_value(&value, &self));
+        } else if let Some(prim) = primitive {
+            print!("{}", format_value(&prim));
             self.flush = true;
+        } else {
+            println!("[ big value ]")
         }
         Ok(())
     }
-    pub fn put(&mut self, value: StackValue) {
-        if let StackValue::Pointer(ptr) = value {
-            self.ref_from_stack(ptr);
-        }
-        self.stack.push(value);
+    pub fn put(&mut self, value: PrimitiveValue) {
+        self.stack.push(StackValue::Primitive(value));
     }
     pub fn load(&mut self, addr: usize) {
-        let value = *self.vars.get(addr).unwrap_or(&StackValue::Nil);
-        if let Ok(ptr) = value.ptr() {
-            self.ref_from_stack(ptr); // copied, not moved
-        }
-        println!("pushing {value:?}");
-        self.stack.push(value);
+        let void = StackValue::default();
+        let value = self.vars.get(addr).unwrap_or(&void);
+        self.stack.push(value.clone());
     }
     pub fn store(&mut self, addr: usize) -> Result<(), ExecutionError> {
         let value = self.stack_pop()?;
-        if addr >= self.vars.len() {
-            self.vars.resize(addr + 1, StackValue::Nil);
-        }
-        let old_value = self.vars.get(addr);
-        if let Some(StackValue::Pointer(address)) = old_value {
-            self.drop_from_vars(*address);
+        if self.vars.len() <= addr {
+            self.vars.resize(addr + 1, StackValue::default());
         }
         self.vars[addr] = value;
-        if let StackValue::Pointer(pointer) = value {
-            self.ref_from_vars(pointer);
-            self.drop_from_stack(pointer, 1);
-        }
         Ok(())
     }
     pub fn jump(&mut self, addr: usize) -> Result<(), ExecutionError> {

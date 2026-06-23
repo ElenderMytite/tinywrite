@@ -36,8 +36,8 @@ fn run_files(args: &[String], debug: bool) -> Result<(), InterpretationError> {
                 match parser::astify(&tokens, parser::types::ParsingMode::Code, &mut 0) {
                     Ok(ast) => {
                         let vars = &mut HashMap::new();
-                        let ir: Vec<ir::Command> = ir::translate(ast, vars)?;
-                        let mut vm = VM::new(ir);
+                        let (ir, strings) = ir::translate(ast, vars)?;
+                        let mut vm = VM::new(ir, strings);
                         vm.execute_program(debug, true)?;
                     }
                     Err(e) => {

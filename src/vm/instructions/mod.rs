@@ -1,9 +1,8 @@
 mod arithmetic;
 mod comparison;
-mod conversions;
 mod get;
-mod group;
 mod hmap;
 mod logic;
 mod manipulation;
+mod string;
 mod vector;

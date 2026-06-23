@@ -27,6 +27,7 @@ pub struct Expression {
 #[derive(Debug, Clone)]
 pub enum Value {
     Name(String),
+    Literal(String),
     Number(isize),
     Bool(bool),
     Char(char),
@@ -53,15 +54,16 @@ pub enum Operation {
 pub enum Part {
     Operation(Operation),
     Call,
-    Keyword(Keyword),
+    Constant(Constant),
     Value(Value),
 }
 #[derive(Debug, Clone, Copy)]
-pub enum Keyword {
+pub enum Constant {
     True,
     False,
     Tab,
     Newline,
+    Space,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum VectorOp {

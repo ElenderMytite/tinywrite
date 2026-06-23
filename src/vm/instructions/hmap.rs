@@ -1,117 +1,81 @@
-use crate::vm::{ExecutionError, HeapItem, HeapValue, StackValue, TypeError, VM};
-use std::collections::HashMap;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
+
+use crate::{
+    ExecutionError::{self, TypeMismatch},
+    vm::{HashableValue, HeapValue, PrimitiveValue, Type, TypeError, VM},
+};
+
 impl VM {
-    fn extract_hmap_item(&mut self, index: usize) -> Result<&mut HeapItem, TypeError> {
-        let val = self.heap.get_mut(&index).unwrap();
-        match val {
-            HeapItem {
-                value: HeapValue::HMap(_),
-                ..
-            } => Ok(val),
-            _ => Err(TypeError),
-        }
-    }
-    pub fn new_hmap(&mut self) {
-        self.allocate(HeapItem::new(HeapValue::HMap(HashMap::new())));
+    pub fn hmap_new(&mut self) {
+        self.stack
+            .push(crate::vm::StackValue::Pointer(Rc::new(RefCell::new(
+                HeapValue::HMap(HashMap::new()),
+            ))));
     }
     pub fn hmap_insert(&mut self) -> Result<(), ExecutionError> {
         let value = self.stack_pop()?;
-        let key = self.stack_pop()?;
-        let pointer = self.stack_pop()?.ptr()?;
-        {
-            let hmap_item = self.extract_hmap_item(pointer)?;
-            match hmap_item {
-                HeapItem {
-                    value: HeapValue::HMap(map),
-                    ..
-                } => map.insert(key, value),
-                _ => unreachable!(),
-            };
+        let key = { self.pop_key()? };
+        let collection = self.stack_top()?.ptr()?;
+        match &mut *collection.borrow_mut() {
+            HeapValue::HMap(hash_map) => {
+                hash_map.insert(key, value);
+                Ok(())
+            }
+            c => Err(ExecutionError::TypeMismatch(TypeError {
+                expected: Type::HMap,
+                actual: Type::of_heap_val(c),
+            })),
         }
-        // eprintln!("Successfully extracted hmap: {:?}", hmap.clone());
-        // dbg!(key, value, ptr, hmap.clone());
-        let _ = value.ptr().inspect(|ptr| {
-            self.ref_from_heap(pointer, *ptr);
-        });
-        let _ = key.ptr().inspect(|ptr| {
-            self.ref_from_heap(pointer, *ptr);
-        });
-        self.drop_from_stack(pointer, 1);
-        Ok(())
-    }
-    pub fn hmap_get(&mut self) -> Result<(), ExecutionError> {
-        let key = self.stack_pop()?;
-        let pointer = self.stack.pop().unwrap().ptr()?;
-        let value = {
-            let hmap_item = self.extract_hmap_item(pointer)?;
-            let hmap = match hmap_item {
-                HeapItem {
-                    value: HeapValue::HMap(map),
-                    ..
-                } => map,
-                _ => unreachable!(),
-            };
-            *hmap.get(&key).unwrap_or(&StackValue::Nil) // TODO: implement option type
-        };
-        // if value was a pointer, increase refence count
-        let _ = value.ptr().inspect(|ptr| {
-            self.ref_from_stack(*ptr); // value was copied, not moved
-        });
-        self.stack.push(value);
-        self.drop_from_stack(pointer, 1);
-        Ok(())
     }
     pub fn hmap_contains(&mut self) -> Result<(), ExecutionError> {
-        let key = self.stack_pop()?;
-        let ptr = self.stack.pop().unwrap().ptr()?;
-        let hmap_item = self.extract_hmap_item(ptr)?;
-        let value = {
-            match hmap_item {
-                HeapItem {
-                    value: HeapValue::HMap(map),
-                    ..
-                } => map.contains_key(&key),
-                _ => unreachable!(),
-            }
+        let key = self.pop_key()?;
+        let ptr = self.pop_hmap()?;
+        let value = match &*ptr.borrow() {
+            HeapValue::HMap(map) => map.contains_key(&key),
+            _ => unreachable!(),
         };
-        let _ = key.ptr().inspect(|ptr| {
-            if value {
-                self.drop_from_stack(*ptr, 1);
-            }
-        });
-        self.stack.push(StackValue::Bool(value));
+        self.put(PrimitiveValue::Bool(value));
         Ok(())
     }
     pub fn hmap_remove(&mut self) -> Result<(), ExecutionError> {
-        // what needs to be tracked for reference counting: key in map, key on stack, removed
-        let key = self.stack_pop()?;
-        let pointer = self.stack_pop()?.ptr()?;
-        let value = {
-            let hmap_item = self.extract_hmap_item(pointer)?;
-            match hmap_item {
-                HeapItem {
-                    value: HeapValue::HMap(map),
-                    ..
-                } => map.remove(&key),
-                _ => unreachable!(),
+        let key = self.pop_key()?;
+        let hmap = self.pop_hmap()?;
+        match &mut *hmap.borrow_mut() {
+            HeapValue::HMap(map) => {
+                map.remove(&key);
             }
-        };
-        self.drop_from_stack(pointer, 1);
-        //key is already put in the hmap, so after popping it from stack amount of references decreases
-        let _ = key.ptr().inspect(|ptr| {
-            self.drop_from_stack(*ptr, 1);
-        });
-        // if value has actually been removed, drop references of the key and value
-        if value.is_some() {
-            let _ = key.ptr().inspect(|ptr| self.drop_from_heap(pointer, *ptr));
-            let _ = value
-                .unwrap()
-                .ptr()
-                .inspect(|ptr| self.drop_from_heap(pointer, *ptr));
+            _ => unreachable!(),
         }
-        // value has just been removed from hmap, but put onto stack
-        self.stack.push(value.unwrap_or(StackValue::Nil)); // TODO: implement option type
-
+        Ok(())
+    }
+    fn pop_key<'b>(&'b mut self) -> Result<HashableValue, ExecutionError> {
+        let key = self.stack_pop()?;
+        if key.is_hashable() {
+            Ok(key.hashable().unwrap())
+        } else {
+            Err(ExecutionError::NonHashableValue)
+        }
+    }
+    fn pop_hmap(&mut self) -> Result<Rc<RefCell<HeapValue>>, ExecutionError> {
+        let collection = self.stack_pop()?.ptr()?;
+        let is_hmap = matches!(&*collection.borrow(), HeapValue::HMap(_));
+        if is_hmap {
+            Ok(collection.clone())
+        } else {
+            Err(TypeMismatch(TypeError {
+                expected: Type::HMap,
+                actual: Type::of_heap_val(&*collection.borrow()),
+            }))
+        }
+    }
+    pub fn hmap_get(&mut self) -> Result<(), ExecutionError> {
+        let key = self.pop_key()?;
+        let collection = self.pop_hmap()?;
+        let value = match &*collection.borrow() {
+            HeapValue::HMap(map) => map.get(&key).cloned().ok_or(ExecutionError::NonExistingKey),
+            _ => unreachable!(),
+        };
+        self.stack.push(value?);
         Ok(())
     }
 }

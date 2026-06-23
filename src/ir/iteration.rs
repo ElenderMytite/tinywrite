@@ -9,6 +9,7 @@ pub(super) fn ir_vector_operation(
     variables: &mut HashMap<String, usize>,
     outer: Option<Operation>,
     commands: &mut Commands,
+    strings: &mut Vec<String>,
 ) -> Result<(), TranslationError> {
     match iteration.operation.clone() {
         Some(Operation::Vector(op)) => match op {
@@ -37,10 +38,10 @@ pub(super) fn ir_vector_operation(
                 }
                 match outer {
                     Some(Operation::Computation(Computation::Add)) => {
-                        commands.push(Command::Put(StackValue::Int(0)));
+                        commands.push(Command::Put(PrimitiveValue::Int(0)));
                     }
                     Some(Operation::Computation(Computation::Mul)) => {
-                        commands.push(Command::Put(StackValue::Int(1)));
+                        commands.push(Command::Put(PrimitiveValue::Int(1)));
                     }
                     _ => (),
                 }
@@ -49,7 +50,7 @@ pub(super) fn ir_vector_operation(
                         Value::Name(s) => register_variable(variables, s.clone()),
                         _ => panic!("Non-name node found inside vector unpacking!"),
                     };
-                    commands.push(Command::Put(StackValue::Int(0)));
+                    commands.push(Command::Put(PrimitiveValue::Int(0)));
                     commands.push(Command::Store(idx));
                     commands.push(Command::Load(vector));
                     commands.push(Command::Store(vec_ptr));
@@ -57,10 +58,10 @@ pub(super) fn ir_vector_operation(
                     // Inverse operations first apply normal opertation on both sides and then apply the inverse operation to the current value on the stack, so we need to put the neutral element before the first iteration
                     match outer {
                         Some(Operation::Computation(Computation::Add | Computation::Sub)) => {
-                            commands.push(Command::Put(StackValue::Int(0)));
+                            commands.push(Command::Put(PrimitiveValue::Int(0)));
                         }
                         Some(Operation::Computation(Computation::Mul | Computation::Div)) => {
-                            commands.push(Command::Put(StackValue::Int(1)));
+                            commands.push(Command::Put(PrimitiveValue::Int(1)));
                         }
                         _ => (),
                     }
@@ -100,7 +101,7 @@ pub(super) fn ir_vector_operation(
                     };
                     // exit condition: idx + 1 < len(vector) (next iteration will try to access idx + 1, so we need to check if it's out of bounds)
                     commands.push(Command::Load(idx));
-                    commands.push(Command::Put(StackValue::Int(1)));
+                    commands.push(Command::Put(PrimitiveValue::Int(1)));
                     commands.push(Command::Add);
                     commands.push(Command::Dup);
                     commands.push(Command::Store(idx));
@@ -113,11 +114,11 @@ pub(super) fn ir_vector_operation(
                 free_variable(variables, format!("--idx-{k_idx}"));
             }
             VectorOp::Pack => {
-                parse_pack(iteration, variables, commands)?;
+                parse_pack(iteration, variables, commands, strings)?;
             }
         },
         Some(Operation::Call(call)) => match call.as_str() {
-            "vec" => parse_pack(iteration, variables, commands)?,
+            "vec" => parse_pack(iteration, variables, commands, strings)?,
             _ => todo!(),
         },
         Some(_) => panic!("Non-vector operation found inside iteration!"),
@@ -129,15 +130,16 @@ fn parse_pack(
     iteration: &Expression,
     variables: &mut HashMap<String, usize>,
     commands: &mut Commands,
+    strings: &mut Vec<String>,
 ) -> Result<(), TranslationError> {
     commands.push(Command::VNew);
     for node in iteration.left.iter().chain(iteration.right.iter()) {
         match node {
             Value::Expression(expr) => {
-                ir_expression(expr, variables, None, commands)?;
+                ir_expression(expr, variables, None, commands, strings)?;
             }
             _ => {
-                ir_value(node, variables, None, commands)?;
+                ir_value(node, variables, None, commands, strings)?;
             }
         }
         commands.push(Command::VPush);
