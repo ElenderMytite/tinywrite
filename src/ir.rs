@@ -5,6 +5,7 @@ mod iteration;
 mod value;
 use crate::TranslationError::UnexpectedValue;
 use crate::ir::TranslationError::UnknownIdentifier;
+use crate::ir::expression::ir_expression;
 use crate::parser;
 use crate::parser::types::{AstNode, Comparison, Computation, Logic, Operation};
 use crate::vm::PrimitiveValue;
@@ -68,7 +69,6 @@ pub fn translate(
     let mut strings: Vec<String> = Vec::new();
     ir(root, variables, &mut commands, &mut strings)?;
     commands.push(Command::Call(0));
-    dbg!(&commands);
     Ok((commands, strings))
 }
 fn ir(
@@ -78,16 +78,14 @@ fn ir(
     strings: &mut Vec<String>,
 ) -> Result<(), TranslationError> {
     match root {
-        AstNode::Expression(expr) => {
-            expression::ir_expression(&expr, variables, None, commands, strings)?;
-        }
+        AstNode::Expression(expr) => ir_expression(&expr, variables, None, commands, strings),
         AstNode::BlockCode(nodes) => {
             for node in nodes {
                 ir(node, variables, commands, strings)?;
             }
+            Ok(())
         }
     }
-    Ok(())
 }
 /// Registers a variable in the environment and returns its index. If the variable already exists, it just returns the existing index.
 fn register_variable(env: &mut HashMap<String, usize>, variable: String) -> usize {

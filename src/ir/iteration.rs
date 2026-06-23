@@ -1,11 +1,13 @@
-use super::expression::ir_expression;
 use super::value::ir_value;
 use super::*;
-use crate::parser::types::{Expression, Operation, Value, VectorOp};
+use crate::{
+    ir::expression::ir_expression,
+    parser::types::{Folder, Operation, Value, VectorOp},
+};
 use std::collections::HashMap;
 
 pub(super) fn ir_vector_operation(
-    iteration: &Expression,
+    iteration: &Folder,
     variables: &mut HashMap<String, usize>,
     outer: Option<Operation>,
     commands: &mut Commands,
@@ -127,7 +129,7 @@ pub(super) fn ir_vector_operation(
     Ok(())
 }
 fn parse_pack(
-    iteration: &Expression,
+    iteration: &Folder,
     variables: &mut HashMap<String, usize>,
     commands: &mut Commands,
     strings: &mut Vec<String>,
@@ -135,12 +137,8 @@ fn parse_pack(
     commands.push(Command::VNew);
     for node in iteration.left.iter().chain(iteration.right.iter()) {
         match node {
-            Value::Expression(expr) => {
-                ir_expression(expr, variables, None, commands, strings)?;
-            }
-            _ => {
-                ir_value(node, variables, None, commands, strings)?;
-            }
+            Value::Expression(expr) => ir_expression(expr, variables, None, commands, strings)?,
+            _ => ir_value(node, variables, None, commands, strings)?,
         }
         commands.push(Command::VPush);
     }

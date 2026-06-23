@@ -1,7 +1,7 @@
 const SPLITTERS: [char; 10] = ['$', ':', ';', '\'', '(', '{', '[', ']', '}', ')'];
-const FINALS: [&'static str; 19] = [
+const FINALS: [&'static str; 21] = [
     "?|", "!|", "++", "**", "||", "&&", "^^", "...", "#.", "@.", "|\\", "/|", "~>", "->", "<-",
-    "</", "<_", "_>", "\\>",
+    "</", "<_", "_>", "\\>", "++", "**",
 ];
 use std::num::ParseIntError;
 
@@ -52,6 +52,12 @@ pub enum Token {
     LooseLess,
     StrictMore,
     LooseMore,
+    Multiquality,
+    Multinequality,
+    MultitrictLess,
+    MultiooseLess,
+    MultitrictMore,
+    MultiooseMore,
     Group,
     Composition,
     // collectors (opreators with unknown amount of elements)
@@ -93,8 +99,18 @@ impl Token {
             "<" => Ok(Token::StrictLess),
             ">=" => Ok(Token::LooseMore),
             "<=" => Ok(Token::LooseLess),
+            "===" => Ok(Token::Multiquality),
+            "!==" => Ok(Token::Multinequality),
+            ">==" => Ok(Token::MultiooseMore),
+            "<==" => Ok(Token::MultiooseLess),
+            ">>" => Ok(Token::MultitrictMore),
+            "<<" => Ok(Token::MultiooseLess),
             "," => Ok(Token::Group),
             "." => Ok(Token::Composition),
+            "++" => Ok(Token::Sum),
+            "**" => Ok(Token::Product),
+            "&&" => Ok(Token::Intersection),
+            "||" => Ok(Token::Union),
             _ => Err(SyntaxError::UnkownSymbolicLiteral(symbols.to_string())),
         }
     }

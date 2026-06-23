@@ -7,19 +7,30 @@ pub enum ParsingMode {
 }
 #[derive(Debug, Clone)]
 pub enum AstNode {
-    Expression(Box<Expression>),
+    Expression(ExpressionNode),
     BlockCode(Vec<AstNode>),
 }
+#[derive(Debug, Clone)]
+pub enum ExpressionNode {
+    Multi(Box<Folder>),
+    Binary(Box<BinaryExpression>),
+}
 impl AstNode {
-    pub fn expr(self) -> Result<Expression, ParseError> {
+    pub fn expr(self) -> Result<ExpressionNode, ParseError> {
         match self {
-            Self::Expression(expr) => Ok(*expr),
+            Self::Expression(expr) => Ok(expr),
             _ => Err(ParseError::UnexpectedBlock),
         }
     }
 }
 #[derive(Debug, Clone)]
-pub struct Expression {
+pub struct BinaryExpression {
+    pub(crate) operation: Option<Operation>,
+    pub(crate) left: Value,
+    pub(crate) right: Value,
+}
+#[derive(Debug, Clone)]
+pub struct Folder {
     pub(crate) operation: Option<Operation>,
     pub(crate) left: Vec<Value>,
     pub(crate) right: Vec<Value>,
@@ -31,7 +42,7 @@ pub enum Value {
     Number(isize),
     Bool(bool),
     Char(char),
-    Expression(Expression),
+    Expression(ExpressionNode),
 }
 impl Value {
     pub(crate) fn get_name(&self) -> Result<String, Value> {
@@ -52,6 +63,7 @@ pub enum Operation {
 }
 #[derive(Debug, Clone)]
 pub enum Part {
+    MultiOperation(Operation),
     Operation(Operation),
     Call,
     Constant(Constant),

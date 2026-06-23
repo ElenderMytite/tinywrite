@@ -1,6 +1,6 @@
-use super::expression::ir_expression;
 use super::{Command, Commands, register_variable};
 use crate::ir::TranslationError;
+use crate::ir::expression::ir_expression;
 use crate::parser::types::{Operation, Value};
 use crate::vm::PrimitiveValue;
 use std::collections::HashMap;

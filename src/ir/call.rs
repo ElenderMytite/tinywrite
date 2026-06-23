@@ -5,10 +5,10 @@ use crate::{
         Command, TranslationError, iteration::ir_vector_operation, register_variable,
         value::ir_value,
     },
-    parser::types::{Expression, Operation},
+    parser::types::{Folder, Operation},
 };
 pub(super) fn ir_call(
-    expression: &Expression,
+    expression: &Folder,
     variables: &mut HashMap<String, usize>,
     commands: &mut Vec<Command>,
     strings: &mut Vec<String>,

@@ -1,6 +1,6 @@
 use std::io::{Write, stdout};
 
-use crate::vm::{ExecutionError, PrimitiveValue, StackValue, VM, format_value};
+use crate::vm::{ExecutionError, PrimitiveValue, StackValue, VM};
 impl VM {
     pub fn dup(&mut self) -> Result<(), ExecutionError> {
         let a = self.stack_top()?.clone();
@@ -26,25 +26,6 @@ impl VM {
             eprintln!("clearing stack");
         }
         self.stack.clear();
-    }
-    pub fn dump(&mut self) -> Result<(), ExecutionError> {
-        let value = self.stack_pop()?;
-        if let StackValue::StringView(s) = value {
-            print!("{string}", string = s.borrow());
-            stdout().flush().unwrap();
-            return Ok(());
-        }
-        let primitive = value.primitive().copied();
-        if let Some(PrimitiveValue::Char('\n')) = primitive {
-            println!();
-            self.flush = false;
-        } else if let Some(prim) = primitive {
-            print!("{}", format_value(&prim));
-            self.flush = true;
-        } else {
-            println!("[ big value ]")
-        }
-        Ok(())
     }
     pub fn put(&mut self, value: PrimitiveValue) {
         self.stack.push(StackValue::Primitive(value));

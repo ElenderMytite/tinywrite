@@ -2,11 +2,14 @@ pub mod types;
 use std::fmt::Display;
 
 use types::{
-    AstNode, Comparison, Computation, Constant, Expression, Logic, Operation, ParsingMode, Part,
-    Value, VectorOp,
+    AstNode, Comparison, Computation, Constant, Folder, Logic, Operation, ParsingMode, Part, Value,
+    VectorOp,
 };
 
-use crate::lexer::Token::{self};
+use crate::{
+    lexer::Token::{self},
+    parser::types::{BinaryExpression, ExpressionNode},
+};
 #[derive(Debug, Clone)]
 pub enum ParseError {
     UnexpectedConstant(String),
@@ -52,9 +55,7 @@ pub fn astify(
             Token::RoundOpen => {
                 *index += 1;
                 buffer.push(Part::Value(Value::Expression(
-                    astify(tokens, ParsingMode::Expression, index)
-                        .unwrap()
-                        .expr()?,
+                    astify(tokens, ParsingMode::Expression, index)?.expr()?,
                 )));
             }
             Token::CurlyOpen => {
@@ -63,9 +64,9 @@ pub fn astify(
             }
             Token::RoundClose => {
                 if block_type == ParsingMode::Expression {
-                    let node = parse_expression(&buffer);
+                    let expr = parse_expression(&buffer);
                     buffer.clear();
-                    return Ok(AstNode::Expression(Box::new(node)));
+                    return Ok(AstNode::Expression(expr));
                 }
             }
             Token::CurlyClosed => {
@@ -75,21 +76,19 @@ pub fn astify(
             }
             Token::EndOfStatement => match block_type {
                 ParsingMode::Expression => {
-                    println!("End of statment in block expression");
                     let expr = Part::Value(Value::Expression(parse_expression(&buffer)));
                     buffer.clear();
                     buffer.push(expr.clone());
                 }
                 ParsingMode::Code => {
                     if !buffer.is_empty() {
-                        let node = parse_expression(&buffer);
-                        //dbg!(&node);
+                        let expr = parse_expression(&buffer);
                         buffer.clear();
-                        nodes.push(AstNode::Expression(Box::new(node)));
+                        nodes.push(AstNode::Expression(expr));
                     }
                 }
             },
-            Token::Assign => buffer.push(Part::Operation(Operation::Set)),
+            Token::Assign => buffer.push(Part::MultiOperation(Operation::Set)),
             Token::Call => buffer.push(Part::Call),
             Token::Plus => buffer.push(Part::Operation(Operation::Computation(Computation::Add))),
             Token::Minus => buffer.push(Part::Operation(Operation::Computation(Computation::Sub))),
@@ -109,6 +108,11 @@ pub fn astify(
             }
             Token::Unequality => {
                 buffer.push(Part::Operation(Operation::Comparison(Comparison::NotEqual)))
+            }
+            Token::Multinequality => {
+                buffer.push(Part::MultiOperation(Operation::Comparison(
+                    Comparison::Equal,
+                )));
             }
             Token::StrictMore => {
                 buffer.push(Part::Operation(Operation::Comparison(Comparison::Greater)))
@@ -162,16 +166,26 @@ pub fn astify(
         ParsingMode::Code => Ok(AstNode::BlockCode(nodes)),
     }
 }
-fn parse_expression(buffer: &Vec<Part>) -> Expression {
+fn parse_expression(buffer: &Vec<Part>) -> ExpressionNode {
     let mut idx = 0;
+    let mut multi: bool = false;
     let mut left: Vec<Part> = Vec::new();
     let mut right: Vec<Part> = Vec::new();
     let mut operation: Option<Operation> = None;
     while idx < buffer.len() {
         match buffer[idx].clone() {
+            Part::MultiOperation(multiop) => {
+                if operation.is_none() {
+                    operation = Some(multiop);
+                    multi = true;
+                } else if operation != Some(multiop) {
+                    panic!("two kinds of operations found inside one expression")
+                }
+            }
             Part::Operation(op) => {
                 if operation.is_none() {
                     operation = Some(op);
+                    multi = false;
                 } else if operation != Some(op) {
                     panic!("two kinds of operations found inside one expression")
                 }
@@ -184,6 +198,7 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
                 }
             }
             Part::Call => {
+                multi = true;
                 idx += 1;
                 if idx < buffer.len() {
                     if let Part::Value(Value::Name(func)) = buffer[idx].clone() {
@@ -205,27 +220,48 @@ fn parse_expression(buffer: &Vec<Part>) -> Expression {
         }
         idx += 1;
     }
-    let expr = Expression {
-        operation,
-        left: parse_unaries(&left),
-        right: parse_unaries(&right),
-    };
+    if multi {
+        ExpressionNode::Multi(Box::new(Folder {
+            operation,
+            left: parse_unaries(&left),
+            right: parse_unaries(&right),
+        }))
+    } else if let (None, true) = (operation.clone(), right.is_empty()) {
+        ExpressionNode::Multi(Box::new(Folder {
+            operation,
+            left: parse_unaries(&left),
+            right: vec![],
+        }))
+    } else {
+        assert_eq!(left.len() + right.len(), 2);
+        let mut args = left.iter().chain(right.iter());
+        let left = parse_unary(args.next().unwrap()).clone();
+        let right = parse_unary(args.next().unwrap()).clone();
+        ExpressionNode::Binary(Box::new(BinaryExpression {
+            operation,
+            left,
+            right,
+        }))
+    }
     //dbg!(&expr);
-    expr
+}
+fn parse_unary(part: &Part) -> &Value {
+    match part {
+        Part::Value(x) => x,
+        Part::Constant(b) => match b {
+            Constant::True => &Value::Bool(true),
+            Constant::False => &Value::Bool(false),
+            Constant::Tab => &Value::Char('\t'),
+            Constant::Newline => &Value::Char('\n'),
+            Constant::Space => &Value::Char(' '),
+        },
+        _ => panic!("can't parse unary expression"),
+    }
 }
 fn parse_unaries(buffer: &Vec<Part>) -> Vec<Value> {
     buffer
         .iter()
-        .map(|part| match part.clone() {
-            Part::Value(x) => x,
-            Part::Constant(b) => match b {
-                Constant::True => Value::Bool(true),
-                Constant::False => Value::Bool(false),
-                Constant::Tab => Value::Char('\t'),
-                Constant::Newline => Value::Char('\n'),
-                Constant::Space => Value::Char(' '),
-            },
-            _ => panic!("can't parse unary expression"),
-        })
+        .map(|part| parse_unary(part))
+        .cloned()
         .collect()
 }

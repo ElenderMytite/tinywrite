@@ -1,5 +1,5 @@
+use rhinio::{InterpretationError, ir, lexer, parser, repl, vm::VM};
 use std::{collections::HashMap, env::args, fs::read};
-use tinywrite::{InterpretationError, ir, lexer, parser, repl, vm::VM};
 fn main() -> Result<(), InterpretationError> {
     let args: Vec<String> = args().skip(1).collect();
 
@@ -28,8 +28,10 @@ fn main() -> Result<(), InterpretationError> {
 /// Run files from command line arguments
 fn run_files(args: &[String], debug: bool) -> Result<(), InterpretationError> {
     for file in args {
-        println!("{}", std::iter::repeat('-').take(64).collect::<String>());
-        println!("running {}", file);
+        if debug {
+            println!("{}", std::iter::repeat('-').take(64).collect::<String>());
+            println!("executing {}", file);
+        }
         match read(format!("{}", file.trim())) {
             Ok(text) => {
                 let tokens = lexer::tokenize(&text)?;
@@ -49,7 +51,10 @@ fn run_files(args: &[String], debug: bool) -> Result<(), InterpretationError> {
                 eprintln!("Error reading file {}: {}", file, e);
             }
         }
-        println!("{}", std::iter::repeat('-').take(64).collect::<String>());
+        if debug {
+            println!("successfully executed {}", file);
+            println!("{}", std::iter::repeat('-').take(64).collect::<String>());
+        }
     }
     Ok(())
 }

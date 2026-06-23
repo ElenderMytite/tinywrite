@@ -1,7 +1,0 @@
-x y = 5 4;
-x y = y x;
-string = "Hello, World!";
-:print string;
-:print x $space y $line;
-map = (:hmap);
-:print map;

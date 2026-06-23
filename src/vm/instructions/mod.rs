@@ -1,5 +1,6 @@
 mod arithmetic;
 mod comparison;
+mod dump;
 mod get;
 mod hmap;
 mod logic;

@@ -20,7 +20,7 @@ impl std::fmt::Display for TypeError {
 pub enum HashableValue {
     Primitive(PrimitiveValue),
     Pair(Box<HashableValue>, Box<HashableValue>),
-    StringView(String),
+    Str(String),
 }
 #[derive(Debug, Clone)]
 pub enum HeapValue {
@@ -153,7 +153,7 @@ impl StackValue {
         }
         match self {
             StackValue::Primitive(primitive) => Some(HashableValue::Primitive(primitive)),
-            Self::StringView(s) => Some(HashableValue::StringView(s.borrow().clone())),
+            Self::StringView(s) => Some(HashableValue::Str(s.borrow().clone())),
             _ => unreachable!(),
         }
     }

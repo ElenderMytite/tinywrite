@@ -1,0 +1,10 @@
+x y = 5 4;
+:print "x = " x $space "y = " y $line;
+:print "swapped x and y\n";
+x y = y x;
+string = "Hello, World!\n";
+:print string;
+:print "x = " x $space "y = " y $line;
+map = (:hmap);
+:print map $line;
+:print "2 + 3 = " (+ 2 3);
